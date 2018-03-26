@@ -42,33 +42,85 @@ impl Canvas {
         self.renderer.present();
     }
 
-    pub fn line (&mut self, x0 : i32, y0 : i32, x1 : i32, y1 : i32, color: u32  ){
+    pub fn line (&mut self, 
+                   mut x0 : i32, mut y0 : i32, 
+                   mut x1 : i32, mut y1 : i32, 
+                   color: u32  ){
 
         if (x1 - x0).abs() > (y1 - y0).abs() {
             if  x1 > x0 {
-                for x in x0 .. x1 {
-                    self.point(x, y0 + (x - x0) * (y1 - y0)/(x1 - x0), color);
+                let k  = (y1 - y0) as f32 /(x1 - x0) as f32;
+                print!("k = {} ",k);
+                let mut err : f32 = 0.0;
+                let mut y = y0;
+                for x in x0 .. x1 + 1 {
+                    err += k;
+                    y += if err > 0.5 {
+                        err -= 1.0; 
+                        1
+                    } else {
+                        0
+                    };
+                    self.point(x, y, color);
                 }
                 println!("1") 
             }
-            else {
-                for x in x1 .. x0 {
-                    self.point(x, y1 + (x - x1) * (y0 - y1)/(x0 - x1), color);
+            else { 
+                let k =  (y0 - y1) as f32 / (x0 - x1) as f32;
+                print!("k = {} ",k);
+                let mut err : f32 = 0.0;
+                let mut y = y1;
+                for x in x1 .. x0 + 1 {
+                    err += k;
+                    y += if err > 0.5 {
+                        err -= 1.0; 
+                        1
+                    } else {
+                        0
+                    };
+                    self.point(x, y, color);
                 }
+
                 println!("2")
             }
         }
         else{
-            if y1 > y0{
-                for y in y0 .. y1 {
-                    self.point(x0 + (y - y0) * (x1 - x0) / (y1 - y0), y, color);
+            if y0 > y1{
+                mem::swap(&mut y0, &mut y1);
+                mem::swap(&mut x0, &mut x1);
+            }
+
+            let k  = (x1 - x0) as f32 / (y1 - y0) as f32;
+            if k > 0.0{                
+                print!("k = {} ",k);
+                let mut err : f32 = 0.0;
+                let mut x = x0;
+                for y in y0 .. y1 + 1{
+                    err += k;
+                    x += if err > 0.5 {
+                        err -= 1.0; 
+                        1
+                    } else {
+                        0
+                    };
+                    self.point(x, y, color);
                 }
                 println!("3")
             }
             else
-            {
-                for y in y1 .. y0 {
-                    self.point(x1 + (y - y1) * (x0 - x1) / (y0 - y1), y, color);
+            {                
+                print!("k = {} ",k);
+                let mut err : f32 = 0.0;
+                let mut x = x0;
+                for y in y0 .. y1 + 1{
+                    err -= k;
+                    x -= if err > 0.5 {
+                        err -= 1.0; 
+                        1
+                    } else {
+                        0
+                    };
+                    self.point(x, y, color);
                 }
                 println!("4")
             }
