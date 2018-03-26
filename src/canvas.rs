@@ -45,88 +45,39 @@ impl Canvas {
     pub fn line (&mut self, 
                    mut x0 : i32, mut y0 : i32, 
                    mut x1 : i32, mut y1 : i32, 
-                   color: u32  ){
-
-        if (x1 - x0).abs() > (y1 - y0).abs() {
-            if  x1 > x0 {
-                let k  = (y1 - y0) as f32 /(x1 - x0) as f32;
-                print!("k = {} ",k);
-                let mut err : f32 = 0.0;
-                let mut y = y0;
-                for x in x0 .. x1 + 1 {
-                    err += k;
-                    y += if err > 0.5 {
-                        err -= 1.0; 
-                        1
-                    } else {
-                        0
-                    };
-                    self.point(x, y, color);
-                }
-                println!("1") 
-            }
-            else { 
-                let k =  (y0 - y1) as f32 / (x0 - x1) as f32;
-                print!("k = {} ",k);
-                let mut err : f32 = 0.0;
-                let mut y = y1;
-                for x in x1 .. x0 + 1 {
-                    err += k;
-                    y += if err > 0.5 {
-                        err -= 1.0; 
-                        1
-                    } else {
-                        0
-                    };
-                    self.point(x, y, color);
-                }
-
-                println!("2")
-            }
+                   color: u32  )
+    {
+        let steep = (x1 - x0).abs() < (y1 - y0).abs();
+        if steep {
+            mem::swap(&mut y0, &mut x0);
+            mem::swap(&mut y1, &mut x1);
         }
-        else{
-            if y0 > y1{
-                mem::swap(&mut y0, &mut y1);
-                mem::swap(&mut x0, &mut x1);
-            }
+        print!("steep = {} ", steep);
 
-            let k  = (x1 - x0) as f32 / (y1 - y0) as f32;
-            if k > 0.0{                
-                print!("k = {} ",k);
-                let mut err : f32 = 0.0;
-                let mut x = x0;
-                for y in y0 .. y1 + 1{
-                    err += k;
-                    x += if err > 0.5 {
-                        err -= 1.0; 
-                        1
-                    } else {
-                        0
-                    };
-                    self.point(x, y, color);
-                }
-                println!("3")
-            }
-            else
-            {                
-                print!("k = {} ",k);
-                let mut err : f32 = 0.0;
-                let mut x = x0;
-                for y in y0 .. y1 + 1{
-                    err -= k;
-                    x -= if err > 0.5 {
-                        err -= 1.0; 
-                        1
-                    } else {
-                        0
-                    };
-                    self.point(x, y, color);
-                }
-                println!("4")
-            }
+        if x0 > x1{
+            mem::swap(&mut y0, &mut y1);
+            mem::swap(&mut x0, &mut x1);
         }
 
+        let k  = (y1 - y0).abs() as f32 / (x1 - x0) as f32 ;
+        let inv = y0 > y1;
+        print!("k = {} inv {} ",k, inv );
 
+        let mut err : f32 = 0.0;
+        let mut y = y0;
+
+        for x in x0 .. x1 + 1 {
+            err += k;
+            let d =  if err > 0.5 { err -= 1.0; 1 } else { 0 };
+            y += if !inv{ d } else { -d };
+
+            if !steep {
+                self.point(x, y, color);
+            }
+            else{
+                self.point(y, x, color);
+            }
+        }
     }
 
     pub fn test (&mut self) {
