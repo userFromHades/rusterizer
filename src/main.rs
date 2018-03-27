@@ -4,6 +4,7 @@ mod canvas;
 mod wavefront_obj;
 //use canvas;
 
+
 fn main() {
 
     let (vertex, index) = wavefront_obj::load_from_file("./teapot.obj");
@@ -27,6 +28,8 @@ fn main() {
     c.line( 210, 210, 10,  10,  0xff0000);
     //c.line( 200, 20, 20,  200,  0xff00ff);
     c.line( 20,  200, 200, 20,   0xff00ff);
+
+    c.daraw_triangle_list(vertex, index);
 
 
     c.wait_end();

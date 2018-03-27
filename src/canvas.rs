@@ -12,7 +12,10 @@ use sdl2::rect::Point;
 
 pub struct Canvas {
     sdl_context : sdl2::Sdl,
-    renderer: sdl2::render::Renderer<'static>
+    renderer: sdl2::render::Renderer<'static>,
+
+    width: u32,
+    height: u32,
 }
 
 impl Canvas {
@@ -28,7 +31,7 @@ impl Canvas {
 
         let renderer = window.renderer().build().unwrap();
 
-        Canvas { sdl_context: sdl_context, renderer: renderer}
+        Canvas { sdl_context: sdl_context, renderer: renderer, width: width, height: height}
     }
 
     pub fn clear(&mut self) {
@@ -36,15 +39,17 @@ impl Canvas {
     }
 
     pub fn point (&mut self, x: i32, y: i32, color: u32){
-        self.renderer.set_draw_color(Color::RGB((color >> (8*2)) as u8, (color >> (8*1)) as u8, color as u8));
+        let color =  Color::RGB((color >> (8*2)) as u8,
+                                (color >> (8*1)) as u8,
+                                 color           as u8);
+        self.renderer.set_draw_color(color);
         self.renderer.draw_point(Point::new(x, y));
-        self.renderer.present();
     }
 
-    pub fn line (&mut self, 
-                   mut x0 : i32, mut y0 : i32, 
-                   mut x1 : i32, mut y1 : i32, 
-                   color: u32  )
+    pub fn line (&mut self,
+                   mut x0 : i32, mut y0 : i32,
+                   mut x1 : i32, mut y1 : i32,
+                   color: u32)
     {
         let steep = (x1 - x0).abs() < (y1 - y0).abs();
         if steep {
@@ -78,6 +83,40 @@ impl Canvas {
         }
     }
 
+    pub fn to_pix_coord (&self, x : f32, y : f32) ->(i32,  i32){
+        (
+            ((x + 1.0) * (self.width  as f32)/ 2.0 )as i32,
+            ((y + 1.0) * (self.height as f32)/ 2.0) as i32
+        )
+    }
+
+    pub fn daraw_triangle_list (&mut self, vertex : Vec<f32>, index:Vec<u32>){
+        for i in 0..index.len()/3 {
+
+            let idx0 = index[i * 3 + 0] - 1;
+            let idx1 = index[i * 3 + 1] - 1;
+            let idx2 = index[i * 3 + 2] - 1;
+
+            let x0 = vertex[(idx0 * 3 + 0) as usize];
+            let y0 = vertex[(idx0 * 3 + 1) as usize];
+
+            let x1 = vertex[(idx1 * 3 + 0) as usize];
+            let y1 = vertex[(idx1 * 3 + 1) as usize];
+
+            let x2 = vertex[(idx2 * 3 + 0) as usize];
+            let y2 = vertex[(idx2 * 3 + 1) as usize];
+
+            let (x0, y0) = self.to_pix_coord(x0, y0);
+            let (x1, y1) = self.to_pix_coord(x1, y1);
+            let (x2, y2) = self.to_pix_coord(x2, y2);
+
+            self.line(x0, y0, x1, y1, 0xffffff);
+            self.line(x1, y1, x2, y2, 0xffffff);
+            self.line(x2, y2, x0, y0, 0xffffff);
+
+        }
+    }
+
     pub fn test (&mut self) {
         // FIXME: rework it
         let mut texture = self.renderer.create_texture_streaming(PixelFormatEnum::RGB24, (256, 256)).unwrap();
@@ -100,6 +139,8 @@ impl Canvas {
     }
 
     pub fn wait_end (&mut self) {
+
+        self.renderer.present();
 
         let mut running = true;
 
