@@ -1,7 +1,6 @@
 use std::thread;
 use std::time;
 use std::mem;
-use std::num;
 
 extern crate sdl2;
 
@@ -52,7 +51,6 @@ impl Canvas {
             mem::swap(&mut y0, &mut x0);
             mem::swap(&mut y1, &mut x1);
         }
-        print!("steep = {} ", steep);
 
         if x0 > x1{
             mem::swap(&mut y0, &mut y1);
@@ -62,7 +60,6 @@ impl Canvas {
         let dx = x1 - x0;
         let k  = 2 * (y1 - y0).abs();
         let inv = y0 > y1;
-        print!("k = {} inv {} ",k, inv );
 
         let mut err  = 0;
         let mut y = y0;
