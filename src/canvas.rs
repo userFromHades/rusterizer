@@ -59,16 +59,17 @@ impl Canvas {
             mem::swap(&mut x0, &mut x1);
         }
 
-        let k  = (y1 - y0).abs() as f32 / (x1 - x0) as f32 ;
+        let dx = x1 - x0;
+        let k  = 2 * (y1 - y0).abs();
         let inv = y0 > y1;
         print!("k = {} inv {} ",k, inv );
 
-        let mut err : f32 = 0.0;
+        let mut err  = 0;
         let mut y = y0;
 
         for x in x0 .. x1 + 1 {
             err += k;
-            let d =  if err > 0.5 { err -= 1.0; 1 } else { 0 };
+            let d =  if err > dx { err -= 2*dx; 1 } else { 0 };
             y += if !inv{ d } else { -d };
 
             if !steep {
