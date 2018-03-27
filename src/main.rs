@@ -1,9 +1,12 @@
 extern crate sdl2;
 
 mod canvas;
+mod wavefront_obj;
 //use canvas;
 
 fn main() {
+
+    let (vertex, index) = wavefront_obj::load_from_file("./teapot.obj");
 
     println!("Hello, world!");
     //canvas::test();
