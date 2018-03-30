@@ -117,6 +117,56 @@ impl Canvas {
         }
     }
 
+    pub fn draw_solid_triangle (&mut self, mut x0 : i32, mut y0 : i32,
+                                           mut x1 : i32, mut y1 : i32,
+                                           mut x2 : i32, mut y2 : i32,
+                                           color : u32 )
+    {
+        if x0 > x1 {
+            mem::swap(&mut x0, &mut x1);
+            mem::swap(&mut y0, &mut y1);
+        }
+        if x1 > x2 {
+            mem::swap(&mut x1, &mut x2);
+            mem::swap(&mut y1, &mut y2);
+        }
+        if x0 > x2 {
+            mem::swap(&mut x0, &mut x2);
+            mem::swap(&mut y0, &mut y2);
+        }
+
+        let k10 = (y1 - y0) as f32 / (x1 - x0) as f32;
+        let k21 = (y2 - y1) as f32 / (x2 - x1) as f32;
+        let k20 = (y2 - y0) as f32 / (x2 - x0) as f32;
+
+        println!("k's {} {} {}", k10, k21, k20);
+
+        for x in x0..x1{
+            let mut _y0 = y0 + (k20 * (x - x0) as f32) as i32;
+            let mut _y1 = y0 + (k10 * (x - x0) as f32) as i32;
+
+            if _y0 > _y1{
+                mem::swap(&mut _y0, &mut _y1);
+            }
+
+            for y in _y0.._y1{
+                self.point(x, y, color)
+            }
+        }
+        for x in x1..x2{
+            let mut _y0 = y0 + (k20 * (x - x0) as f32) as i32;
+            let mut _y1 = y1 + (k21 * (x - x1) as f32) as i32;
+
+            if _y0 > _y1{
+                mem::swap(&mut _y0, &mut _y1);
+            }
+
+            for y in _y0.._y1{
+                self.point(x, y, color)
+            }
+        }
+    }
+
     pub fn test (&mut self) {
         // FIXME: rework it
         let mut texture = self.renderer.create_texture_streaming(PixelFormatEnum::RGB24, (256, 256)).unwrap();

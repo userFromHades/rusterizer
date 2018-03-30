@@ -29,8 +29,13 @@ fn main() {
     //c.line( 200, 20, 20,  200,  0xff00ff);
     c.line( 20,  200, 200, 20,   0xff00ff);
 
-    c.daraw_triangle_list(vertex, index);
+    //c.daraw_triangle_list(vertex, index);
 
+    //c.draw_solid_triangle(200, 200, 300, 251, 500, 201,  0xff00ff);
+    c.draw_solid_triangle(200, 200,  500, 210,  300, 251,  0xff00ff);
+    c.draw_solid_triangle(200, 200,  500, 210,  300, 151,  0xff00ff);
+
+    c.draw_solid_triangle(500, 500,  500, 600,  600, 500,  0xff00ff);
 
     c.wait_end();
 }
