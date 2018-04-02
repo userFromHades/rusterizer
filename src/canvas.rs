@@ -1,6 +1,7 @@
 use std::thread;
 use std::time;
 use std::mem;
+use std::num;
 
 extern crate rand;
 use rand::Rng;
@@ -15,6 +16,10 @@ use sdl2::rect::Point;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
+fn normalise( x : f32, y : f32, z : f32) ->(f32, f32, f32) {
+    let l = (x * x + y * y + z * z ).sqrt();
+    (x / l, y / l, z / l)
+}
 
 pub struct MyCanvas {
     sdl_context : sdl2::Sdl,
@@ -186,18 +191,35 @@ impl MyCanvas {
 
             let x0 = vertex[(idx0 * 3 + 0) as usize];
             let y0 = vertex[(idx0 * 3 + 1) as usize];
+            let z0 = vertex[(idx0 * 3 + 2) as usize];
 
             let x1 = vertex[(idx1 * 3 + 0) as usize];
             let y1 = vertex[(idx1 * 3 + 1) as usize];
+            let z1 = vertex[(idx1 * 3 + 2) as usize];
 
             let x2 = vertex[(idx2 * 3 + 0) as usize];
             let y2 = vertex[(idx2 * 3 + 1) as usize];
+            let z2 = vertex[(idx2 * 3 + 2) as usize];
+
+            let (vx1, vy1, vz1 ) = (x1 - x0, y1 - y0, z1 - z0);
+            let (vx2, vy2, vz2 ) = (x2 - x0, y2 - y0, z2 - z0);
+
+                        
+            let (nx, ny, nz) = (vy1 * vz2 - vz1 * vy2,
+                                vz1 * vx2 - vx1 * vz2,
+                                vx1 * vy2 - vy1 * vx2);
+
+            let (nx, ny, nz) = normalise (nx, ny, nz);
+
+            let f = nz; //Dot product
 
             let (x0, y0) = self.to_pix_coord(x0, y0);
             let (x1, y1) = self.to_pix_coord(x1, y1);
             let (x2, y2) = self.to_pix_coord(x2, y2);
 
-            let color : u32 = rng.gen_range(0, 0xffffff);
+            let cl = (f * 255.0) as u32;
+            let color : u32 = (cl << 16) | (cl << 8) | cl;
+
             self.draw_solid_triangle (x0, y0, x1, y1, x2, y2, color);
         }
          println!("end");
