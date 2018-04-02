@@ -2,36 +2,44 @@ use std::thread;
 use std::time;
 use std::mem;
 
-extern crate sdl2;
+extern crate rand;
+use rand::Rng;
+//use rand::thread_rng;
 
+extern crate sdl2;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
+use sdl2::render::Canvas;
+use sdl2::video::Window;
 
-pub struct Canvas {
+
+pub struct MyCanvas {
     sdl_context : sdl2::Sdl,
-    renderer: sdl2::render::Renderer<'static>,
+    //sdl_video : sdl2::Vide
+    renderer: sdl2::render::Canvas<Window>,
 
     width: u32,
     height: u32,
 }
 
-impl Canvas {
+impl MyCanvas {
 
-    pub fn new(width: u32, height: u32) -> Canvas {
-        let sdl_context = sdl2::init().video().unwrap();
+    pub fn new(width: u32, height: u32) -> MyCanvas {
+        let sdl_context = sdl2::init().unwrap();
+        let sdl_video = sdl_context.video().unwrap();
 
-        let window = sdl_context.window("rust-sdl2 demo: Video", width, height)
+        let window = sdl_video.window("rust-sdl2 demo: Video", width, height)
             .position_centered()
             .opengl()
             .build()
             .unwrap();
 
-        let renderer = window.renderer().build().unwrap();
+        let sdl_canvas = window.into_canvas().build().unwrap();
 
-        Canvas { sdl_context: sdl_context, renderer: renderer, width: width, height: height}
+        MyCanvas { sdl_context: sdl_context, renderer: sdl_canvas, width: width, height: height}
     }
 
     pub fn clear(&mut self) {
@@ -92,7 +100,6 @@ impl Canvas {
 
     pub fn daraw_triangle_list (&mut self, vertex : Vec<f32>, index:Vec<u32>){
         for i in 0..index.len()/3 {
-
             let idx0 = index[i * 3 + 0] - 1;
             let idx1 = index[i * 3 + 1] - 1;
             let idx2 = index[i * 3 + 2] - 1;
@@ -122,24 +129,25 @@ impl Canvas {
                                            mut x2 : i32, mut y2 : i32,
                                            color : u32 )
     {
+        // println!("color {} ", color);
         if x0 > x1 {
             mem::swap(&mut x0, &mut x1);
             mem::swap(&mut y0, &mut y1);
-        }
-        if x1 > x2 {
-            mem::swap(&mut x1, &mut x2);
-            mem::swap(&mut y1, &mut y2);
         }
         if x0 > x2 {
             mem::swap(&mut x0, &mut x2);
             mem::swap(&mut y0, &mut y2);
         }
+        if x1 > x2 {
+            mem::swap(&mut x1, &mut x2);
+            mem::swap(&mut y1, &mut y2);
+        }
+
+        //println!("{} {} {}", x0, x1, x2);
 
         let k10 = (y1 - y0) as f32 / (x1 - x0) as f32;
         let k21 = (y2 - y1) as f32 / (x2 - x1) as f32;
         let k20 = (y2 - y0) as f32 / (x2 - x0) as f32;
-
-        println!("k's {} {} {}", k10, k21, k20);
 
         for x in x0..x1{
             let mut _y0 = y0 + (k20 * (x - x0) as f32) as i32;
@@ -167,35 +175,41 @@ impl Canvas {
         }
     }
 
-    pub fn test (&mut self) {
-        // FIXME: rework it
-        let mut texture = self.renderer.create_texture_streaming(PixelFormatEnum::RGB24, (256, 256)).unwrap();
-        // Create a red-green gradient
-        texture.with_lock(None, |buffer: &mut [u8], pitch: usize| {
-            for y in 0..256 {
-                for x in 0..256 {
-                    let offset = y*pitch + x*3;
-                    buffer[offset + 0] = x as u8;
-                    buffer[offset + 1] = y as u8;
-                    buffer[offset + 2] = 0 as u8;
-                }
-            }
-        }).unwrap();
+    pub fn draw_solid_triangle_list (&mut self, vertex : Vec<f32>, index:Vec<u32>){
 
-        self.renderer.clear();
-        self.renderer.copy(&texture, None, Some(Rect::new_unwrap(100, 100, 256, 256)));
-        self.renderer.copy_ex(&texture, None, Some(Rect::new_unwrap(450, 100, 256, 256)), 30.0, None, (false, false));
-        self.renderer.present();
+        let mut rng = rand::thread_rng();
+        for i in 0..index.len()/3 {
+
+            let idx0 = index[i * 3 + 0] - 1;
+            let idx1 = index[i * 3 + 1] - 1;
+            let idx2 = index[i * 3 + 2] - 1;
+
+            let x0 = vertex[(idx0 * 3 + 0) as usize];
+            let y0 = vertex[(idx0 * 3 + 1) as usize];
+
+            let x1 = vertex[(idx1 * 3 + 0) as usize];
+            let y1 = vertex[(idx1 * 3 + 1) as usize];
+
+            let x2 = vertex[(idx2 * 3 + 0) as usize];
+            let y2 = vertex[(idx2 * 3 + 1) as usize];
+
+            let (x0, y0) = self.to_pix_coord(x0, y0);
+            let (x1, y1) = self.to_pix_coord(x1, y1);
+            let (x2, y2) = self.to_pix_coord(x2, y2);
+
+            let color : u32 = rng.gen_range(0, 0xffffff);
+            self.draw_solid_triangle (x0, y0, x1, y1, x2, y2, color);
+        }
+         println!("end");
     }
 
     pub fn wait_end (&mut self) {
 
         self.renderer.present();
-
         let mut running = true;
-
+        let mut event_pump = self.sdl_context.event_pump().unwrap();
         while running {
-            for event in self.sdl_context.event_pump().poll_iter() {
+            for event in event_pump.poll_iter() {
                 use sdl2::event::Event;
 
                 match event {

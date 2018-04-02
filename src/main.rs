@@ -1,4 +1,6 @@
+
 extern crate sdl2;
+extern crate rand;
 
 mod canvas;
 mod wavefront_obj;
@@ -11,7 +13,7 @@ fn main() {
 
     println!("Hello, world!");
     //canvas::test();
-    let mut c = canvas::Canvas::new (800, 600);
+    let mut c = canvas::MyCanvas::new (800, 600);
     //c.test();
 
     c.clear();
@@ -30,12 +32,12 @@ fn main() {
     c.line( 20,  200, 200, 20,   0xff00ff);
 
     //c.daraw_triangle_list(vertex, index);
-
+    c.draw_solid_triangle_list(vertex, index);
     //c.draw_solid_triangle(200, 200, 300, 251, 500, 201,  0xff00ff);
-    c.draw_solid_triangle(200, 200,  500, 210,  300, 251,  0xff00ff);
-    c.draw_solid_triangle(200, 200,  500, 210,  300, 151,  0xff00ff);
+    //c.draw_solid_triangle(200, 200,  500, 210,  300, 251,  0xff00ff);
+    //c.draw_solid_triangle(200, 200,  500, 210,  300, 151,  0xff00ff);
 
-    c.draw_solid_triangle(500, 500,  500, 600,  600, 500,  0xff00ff);
+    //c.draw_solid_triangle(500, 500,  500, 600,  600, 500,  0xff00ff);
 
     c.wait_end();
 }
