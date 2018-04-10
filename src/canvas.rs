@@ -13,6 +13,7 @@ use sdl2::rect::Rect;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
+use sdl2::render;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
@@ -23,11 +24,14 @@ fn normalise( x : f32, y : f32, z : f32) ->(f32, f32, f32) {
 
 pub struct MyCanvas {
     sdl_context : sdl2::Sdl,
-    //sdl_video : sdl2::Vide
-    renderer: sdl2::render::Canvas<Window>,
+    sdl_canvas: sdl2::render::Canvas<Window>,
 
     width: u32,
     height: u32,
+
+    rgb_buffer: Vec<u8>,
+    z_buffer: Vec<f32>,
+
 }
 
 impl MyCanvas {
@@ -36,27 +40,41 @@ impl MyCanvas {
         let sdl_context = sdl2::init().unwrap();
         let sdl_video = sdl_context.video().unwrap();
 
-        let window = sdl_video.window("rust-sdl2 demo: Video", width, height)
+        let sdl_window = sdl_video.window("rust-sdl2 demo: Video", width, height)
             .position_centered()
             .opengl()
             .build()
             .unwrap();
 
-        let sdl_canvas = window.into_canvas().build().unwrap();
+        let sdl_canvas = sdl_window.into_canvas().build().unwrap();
 
-        MyCanvas { sdl_context: sdl_context, renderer: sdl_canvas, width: width, height: height}
+        MyCanvas {
+            sdl_context: sdl_context,
+            sdl_canvas: sdl_canvas,
+            width: width,
+            height: height,
+            rgb_buffer: vec![0; (width * height * 3) as usize],
+            z_buffer: vec![0.0; (width * height) as usize]
+        }
     }
 
     pub fn clear(&mut self) {
-         self.renderer.clear();
+         self.sdl_canvas.clear();
     }
 
     pub fn point (&mut self, x: i32, y: i32, color: u32){
-        let color =  Color::RGB((color >> (8*2)) as u8,
-                                (color >> (8*1)) as u8,
-                                 color           as u8);
-        self.renderer.set_draw_color(color);
-        self.renderer.draw_point(Point::new(x, y));
+        if x < 0 ||
+           y < 0 ||
+           x >= (self.width as i32) ||
+           y >= (self.height as i32)
+        {
+            return;
+        }
+
+        let i = 3 * (x as u32 + y as u32 * self.width) as usize;
+        self.rgb_buffer[i + 0] = (color >> (8*2)) as u8;
+        self.rgb_buffer[i + 1] = (color >> (8*1)) as u8;
+        self.rgb_buffer[i + 2] = (color >> (8*0)) as u8;
     }
 
     pub fn line (&mut self,
@@ -227,7 +245,22 @@ impl MyCanvas {
 
     pub fn wait_end (&mut self) {
 
-        self.renderer.present();
+
+        let texture_creator = self.sdl_canvas.texture_creator();
+
+        let mut texture = texture_creator.create_texture_streaming(
+        PixelFormatEnum::RGB24, self.width, self.height).unwrap();
+
+        texture.with_lock(None, |buffer: &mut [u8], pitch: usize| {
+            let n = (self.width * self.height * 3) as usize;
+            for i in 0..n {
+                buffer[i] = self.rgb_buffer[i];
+            }
+        }).unwrap();
+
+        self.sdl_canvas.copy(&texture, None, None).unwrap();
+
+        self.sdl_canvas.present();
         let mut running = true;
         let mut event_pump = self.sdl_context.event_pump().unwrap();
         while running {
