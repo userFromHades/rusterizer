@@ -1,20 +1,13 @@
 use std::thread;
 use std::time;
 use std::mem;
-use std::num;
 
 extern crate rand;
-use rand::Rng;
-//use rand::thread_rng;
 
 extern crate sdl2;
 use sdl2::pixels::PixelFormatEnum;
-use sdl2::rect::Rect;
+
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
-use sdl2::rect::Point;
-use sdl2::render;
-use sdl2::render::Canvas;
 use sdl2::video::Window;
 
 fn normalise( x : f32, y : f32, z : f32) ->(f32, f32, f32) {
@@ -42,6 +35,32 @@ fn clump (x : f32, a :f32, b: f32) -> f32 {
     }
     else {x}
 }
+
+fn sort_vertexes (mut x0 : f32, mut y0 : f32, mut z0 : f32,
+                    mut x1 : f32, mut y1 : f32, mut z1 : f32,
+                    mut x2 : f32, mut y2 : f32, mut z2 : f32) ->
+                    (f32, f32, f32,
+                    f32, f32, f32,
+                    f32, f32, f32)
+{
+    if x0 > x1 {
+        mem::swap(&mut x0, &mut x1);
+        mem::swap(&mut y0, &mut y1);
+        mem::swap(&mut z0, &mut z1);
+    }
+    if x0 > x2 {
+        mem::swap(&mut x0, &mut x2);
+        mem::swap(&mut y0, &mut y2);
+        mem::swap(&mut z0, &mut z2);
+    }
+    if x1 > x2 {
+        mem::swap(&mut x1, &mut x2);
+        mem::swap(&mut y1, &mut y2);
+        mem::swap(&mut z1, &mut z2);
+    }
+    (x0,y0,z0, x1,y1,z1, x2,y2,z2)
+}
+
 
 pub struct MyCanvas {
     sdl_context : sdl2::Sdl,
@@ -81,6 +100,32 @@ impl MyCanvas {
 
     pub fn clear(&mut self) {
          self.sdl_canvas.clear();
+    }
+
+    pub fn setDepth (&mut self, x: i32, y: i32, d : f32){
+        if x < 0 ||
+           y < 0 ||
+           x >= (self.width as i32) ||
+           y >= (self.height as i32)
+        {
+            return;
+        }
+
+        let i = (x as u32 + y as u32 * self.width) as usize;
+        self.z_buffer[i] = d
+    }
+
+    pub fn depth (&mut self, x: i32, y: i32) -> f32{
+        if x < 0 ||
+           y < 0 ||
+           x >= (self.width as i32) ||
+           y >= (self.height as i32)
+        {
+            return -100000.0;
+        }
+
+        let i = (x as u32 + y as u32 * self.width) as usize;
+        self.z_buffer[i]
     }
 
     pub fn point (&mut self, x: i32, y: i32, color: u32){
@@ -168,58 +213,76 @@ impl MyCanvas {
         }
     }
 
-    pub fn draw_solid_triangle (&mut self, mut x0 : i32, mut y0 : i32,
-                                           mut x1 : i32, mut y1 : i32,
-                                           mut x2 : i32, mut y2 : i32,
+
+    pub fn draw_solid_triangle (&mut self, mut x0 : f32, mut y0 : f32, mut z0 : f32,
+                                           mut x1 : f32, mut y1 : f32, mut z1 : f32,
+                                           mut x2 : f32, mut y2 : f32, mut z2 : f32,
                                            color : u32 )
     {
-        // println!("color {} ", color);
-        if x0 > x1 {
-            mem::swap(&mut x0, &mut x1);
-            mem::swap(&mut y0, &mut y1);
-        }
-        if x0 > x2 {
-            mem::swap(&mut x0, &mut x2);
-            mem::swap(&mut y0, &mut y2);
-        }
-        if x1 > x2 {
-            mem::swap(&mut x1, &mut x2);
-            mem::swap(&mut y1, &mut y2);
-        }
+        let (x0,y0,z0, x1,y1,z1, x2,y2,z2) = sort_vertexes(x0,y0,z0, x1,y1,z1, x2,y2,z2);
 
-        //println!("{} {} {}", x0, x1, x2);
+        let (x0, y0) = self.to_pix_coord(x0, y0);
+        let (x1, y1) = self.to_pix_coord(x1, y1);
+        let (x2, y2) = self.to_pix_coord(x2, y2);
 
-        let k10 = (y1 - y0) as f32 / (x1 - x0) as f32;
-        let k21 = (y2 - y1) as f32 / (x2 - x1) as f32;
-        let k20 = (y2 - y0) as f32 / (x2 - x0) as f32;
+
+        let ky10 = (y1 - y0) as f32 / (x1 - x0) as f32;
+        let ky21 = (y2 - y1) as f32 / (x2 - x1) as f32;
+        let ky20 = (y2 - y0) as f32 / (x2 - x0) as f32;
+
+        let kz10 = (z1 - z0) as f32 / (x1 - x0) as f32;
+        let kz21 = (z2 - z1) as f32 / (x2 - x1) as f32;
+        let kz20 = (z2 - z0) as f32 / (x2 - x0) as f32;
 
         for x in x0..x1{
-            let mut _y0 = y0 + (k20 * (x - x0) as f32) as i32;
-            let mut _y1 = y0 + (k10 * (x - x0) as f32) as i32;
+            let mut _y0 = y0 + (ky20 * (x - x0) as f32) as i32;
+            let mut _y1 = y0 + (ky10 * (x - x0) as f32) as i32;
+
+            let mut _z0 = z0 + (kz20 * (x - x0) as f32) ;
+            let mut _z1 = z0 + (kz10 * (x - x0) as f32) ;
 
             if _y0 > _y1{
                 mem::swap(&mut _y0, &mut _y1);
+                mem::swap(&mut _z0, &mut _z1);
             }
 
+            let kz = _z1 - _z0 / (_y1 - _y0) as f32;
             for y in _y0.._y1{
-                self.point(x, y, color)
+                let _z = _z0 + (y - _y0) as f32 * kz;
+                if _z <  self.depth(x, y){
+                    self.setDepth(x, y, _z);
+                    self.point(x, y, color);
+                }
             }
         }
+
         for x in x1..x2{
-            let mut _y0 = y0 + (k20 * (x - x0) as f32) as i32;
-            let mut _y1 = y1 + (k21 * (x - x1) as f32) as i32;
+            let mut _y0 = y0 + (ky20 * (x - x0) as f32) as i32;
+            let mut _y1 = y1 + (ky21 * (x - x1) as f32) as i32;
+
+            let mut _z0 = z0 + (kz20 * (x - x0) as f32) ;
+            let mut _z1 = z1 + (kz21 * (x - x0) as f32) ;
 
             if _y0 > _y1{
                 mem::swap(&mut _y0, &mut _y1);
+                mem::swap(&mut _z0, &mut _z1);
             }
 
+            let kz = _z1 - _z0 / (_y1 - _y0) as f32;
             for y in _y0.._y1{
-                self.point(x, y, color)
+                let _z = _z0 + (y - _y0) as f32 * kz;
+                if _z <  self.depth(x, y){
+                    self.setDepth(x, y, _z);
+                    self.point(x, y, color);
+                }
             }
         }
     }
 
-    pub fn draw_solid_triangle_list (&mut self, vertex : Vec<f32>, index:Vec<u32>){
+    pub fn draw_solid_triangle_list (&mut self,
+        vertex : Vec<f32>,
+        index  : Vec<u32>)
+    {
 
         let mut rng = rand::thread_rng();
         for i in 0..index.len()/3 {
@@ -247,22 +310,19 @@ impl MyCanvas {
 
             let (nx, ny, nz) = normalise (nx, ny, nz);
 
-            if nz >= 0.0 {
+           /* if nz >= 0.0 {
                 continue;
-            }
+            }*/
 
             let (lx, ly, lz) = normalise(1.0, 0.0, 0.0);
 
-            let f = clump (dot_product(nx, ny, nz, lx, ly, lz), 0.0, 1.0);
+            let f = clump (0.5 + 0.5 * dot_product(nx, ny, nz, lx, ly, lz), 0.0, 1.0);
 
-            let (x0, y0) = self.to_pix_coord(x0, y0);
-            let (x1, y1) = self.to_pix_coord(x1, y1);
-            let (x2, y2) = self.to_pix_coord(x2, y2);
 
             let cl = (f * 255.0) as u32;
             let color : u32 = (cl << 16) | (cl << 8) | cl;
 
-            self.draw_solid_triangle (x0, y0, x1, y1, x2, y2, color);
+            self.draw_solid_triangle (x0, y0, z0, x1, y1, z1, x2, y2, z2, color);
         }
          println!("end");
     }
