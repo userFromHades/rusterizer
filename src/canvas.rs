@@ -22,6 +22,27 @@ fn normalise( x : f32, y : f32, z : f32) ->(f32, f32, f32) {
     (x / l, y / l, z / l)
 }
 
+fn dot_product(x1 : f32, y1 : f32, z1 : f32,
+               x2 : f32, y2 : f32, z2 : f32) -> f32{
+    x1 * x2 + y1 * y2 + z1 * z2
+}
+
+fn cross_product(x1 : f32, y1 : f32, z1 : f32,
+                 x2 : f32, y2 : f32, z2 : f32) -> (f32, f32, f32){
+    (y1 * z2 - z1 * y2,
+     z1 * x2 - x1 * z2,
+     x1 * y2 - y1 * x2)
+}
+
+fn clump (x : f32, a :f32, b: f32) -> f32 {
+    if x < a{
+        a
+    }else if x > b {
+        b
+    }
+    else {x}
+}
+
 pub struct MyCanvas {
     sdl_context : sdl2::Sdl,
     sdl_canvas: sdl2::render::Canvas<Window>,
@@ -117,7 +138,7 @@ impl MyCanvas {
     pub fn to_pix_coord (&self, x : f32, y : f32) ->(i32,  i32){
         (
             ((x + 1.0) * (self.width  as f32)/ 2.0 )as i32,
-            ((y + 1.0) * (self.height as f32)/ 2.0) as i32
+            ((1.0 - y) * (self.height as f32)/ 2.0) as i32
         )
     }
 
@@ -207,29 +228,32 @@ impl MyCanvas {
             let idx1 = index[i * 3 + 1] - 1;
             let idx2 = index[i * 3 + 2] - 1;
 
-            let x0 = vertex[(idx0 * 3 + 0) as usize];
-            let y0 = vertex[(idx0 * 3 + 1) as usize];
-            let z0 = vertex[(idx0 * 3 + 2) as usize];
+            let x0 = 0.2 * vertex[(idx0 * 3 + 0) as usize];
+            let y0 = 0.2 * vertex[(idx0 * 3 + 1) as usize];
+            let z0 = 0.2 * vertex[(idx0 * 3 + 2) as usize];
 
-            let x1 = vertex[(idx1 * 3 + 0) as usize];
-            let y1 = vertex[(idx1 * 3 + 1) as usize];
-            let z1 = vertex[(idx1 * 3 + 2) as usize];
+            let x1 = 0.2 * vertex[(idx1 * 3 + 0) as usize];
+            let y1 = 0.2 * vertex[(idx1 * 3 + 1) as usize];
+            let z1 = 0.2 * vertex[(idx1 * 3 + 2) as usize];
 
-            let x2 = vertex[(idx2 * 3 + 0) as usize];
-            let y2 = vertex[(idx2 * 3 + 1) as usize];
-            let z2 = vertex[(idx2 * 3 + 2) as usize];
+            let x2 = 0.2 * vertex[(idx2 * 3 + 0) as usize];
+            let y2 = 0.2 * vertex[(idx2 * 3 + 1) as usize];
+            let z2 = 0.2 * vertex[(idx2 * 3 + 2) as usize];
 
             let (vx1, vy1, vz1 ) = (x1 - x0, y1 - y0, z1 - z0);
             let (vx2, vy2, vz2 ) = (x2 - x0, y2 - y0, z2 - z0);
 
-                        
-            let (nx, ny, nz) = (vy1 * vz2 - vz1 * vy2,
-                                vz1 * vx2 - vx1 * vz2,
-                                vx1 * vy2 - vy1 * vx2);
+            let (nx, ny, nz) = cross_product(vx1, vy1, vz1, vx2, vy2, vz2);
 
             let (nx, ny, nz) = normalise (nx, ny, nz);
 
-            let f = nz; //Dot product
+            if nz >= 0.0 {
+                continue;
+            }
+
+            let (lx, ly, lz) = normalise(1.0, 0.0, 0.0);
+
+            let f = clump (dot_product(nx, ny, nz, lx, ly, lz), 0.0, 1.0);
 
             let (x0, y0) = self.to_pix_coord(x0, y0);
             let (x1, y1) = self.to_pix_coord(x1, y1);
