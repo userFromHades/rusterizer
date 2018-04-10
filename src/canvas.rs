@@ -5,10 +5,12 @@ use std::mem;
 extern crate rand;
 
 extern crate sdl2;
-use sdl2::pixels::PixelFormatEnum;
 
+use sdl2::pixels::PixelFormatEnum;
 use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
+
+use vec3;
 
 fn normalise( x : f32, y : f32, z : f32) ->(f32, f32, f32) {
     let l = (x * x + y * y + z * z ).sqrt();
@@ -94,7 +96,7 @@ impl MyCanvas {
             width: width,
             height: height,
             rgb_buffer: vec![0; (width * height * 3) as usize],
-            z_buffer: vec![0.0; (width * height) as usize]
+            z_buffer: vec![100000.0; (width * height) as usize]
         }
     }
 
@@ -246,33 +248,39 @@ impl MyCanvas {
                 mem::swap(&mut _z0, &mut _z1);
             }
 
-            let kz = _z1 - _z0 / (_y1 - _y0) as f32;
+            let kz = (_z1 - _z0) / (_y1 - _y0) as f32;
             for y in _y0.._y1{
                 let _z = _z0 + (y - _y0) as f32 * kz;
                 if _z <  self.depth(x, y){
                     self.setDepth(x, y, _z);
+
+                    //let cl = (255.0 - _z * 100.0) as u32;
+                    //let color : u32 = (cl << 16) | (cl << 8) | cl;
                     self.point(x, y, color);
                 }
             }
         }
 
-        for x in x1..x2{
+        for x in x1..(x2 ){
             let mut _y0 = y0 + (ky20 * (x - x0) as f32) as i32;
             let mut _y1 = y1 + (ky21 * (x - x1) as f32) as i32;
 
             let mut _z0 = z0 + (kz20 * (x - x0) as f32) ;
-            let mut _z1 = z1 + (kz21 * (x - x0) as f32) ;
+            let mut _z1 = z1 + (kz21 * (x - x1) as f32) ;
 
             if _y0 > _y1{
                 mem::swap(&mut _y0, &mut _y1);
                 mem::swap(&mut _z0, &mut _z1);
             }
 
-            let kz = _z1 - _z0 / (_y1 - _y0) as f32;
+            let kz = (_z1 - _z0) / (_y1 - _y0) as f32;
             for y in _y0.._y1{
                 let _z = _z0 + (y - _y0) as f32 * kz;
                 if _z <  self.depth(x, y){
                     self.setDepth(x, y, _z);
+
+                    //let cl = (255.0 - _z * 100.0) as u32;
+                    //let color : u32 = (cl << 16) | (cl << 8) | cl;
                     self.point(x, y, color);
                 }
             }
@@ -280,8 +288,10 @@ impl MyCanvas {
     }
 
     pub fn draw_solid_triangle_list (&mut self,
-        vertex : Vec<f32>,
-        index  : Vec<u32>)
+        vertex : &Vec<f32>,
+        index  : &Vec<u32>,
+        scale : f32,
+        offset : vec3::vec3)
     {
 
         let mut rng = rand::thread_rng();
@@ -291,17 +301,17 @@ impl MyCanvas {
             let idx1 = index[i * 3 + 1] - 1;
             let idx2 = index[i * 3 + 2] - 1;
 
-            let x0 = 0.2 * vertex[(idx0 * 3 + 0) as usize];
-            let y0 = 0.2 * vertex[(idx0 * 3 + 1) as usize];
-            let z0 = 0.2 * vertex[(idx0 * 3 + 2) as usize];
+            let x0 = scale * vertex[(idx0 * 3 + 0) as usize] + offset.x;
+            let y0 = scale * vertex[(idx0 * 3 + 1) as usize] + offset.y;
+            let z0 = scale * vertex[(idx0 * 3 + 2) as usize] + offset.z;
 
-            let x1 = 0.2 * vertex[(idx1 * 3 + 0) as usize];
-            let y1 = 0.2 * vertex[(idx1 * 3 + 1) as usize];
-            let z1 = 0.2 * vertex[(idx1 * 3 + 2) as usize];
+            let x1 = scale * vertex[(idx1 * 3 + 0) as usize] + offset.x;
+            let y1 = scale * vertex[(idx1 * 3 + 1) as usize] + offset.y;
+            let z1 = scale * vertex[(idx1 * 3 + 2) as usize] + offset.z;
 
-            let x2 = 0.2 * vertex[(idx2 * 3 + 0) as usize];
-            let y2 = 0.2 * vertex[(idx2 * 3 + 1) as usize];
-            let z2 = 0.2 * vertex[(idx2 * 3 + 2) as usize];
+            let x2 = scale * vertex[(idx2 * 3 + 0) as usize] + offset.x;
+            let y2 = scale * vertex[(idx2 * 3 + 1) as usize] + offset.y;
+            let z2 = scale * vertex[(idx2 * 3 + 2) as usize] + offset.z;
 
             let (vx1, vy1, vz1 ) = (x1 - x0, y1 - y0, z1 - z0);
             let (vx2, vy2, vz2 ) = (x2 - x0, y2 - y0, z2 - z0);
@@ -310,14 +320,13 @@ impl MyCanvas {
 
             let (nx, ny, nz) = normalise (nx, ny, nz);
 
-           /* if nz >= 0.0 {
+            if nz >= 0.0 {
                 continue;
-            }*/
+            }
 
             let (lx, ly, lz) = normalise(1.0, 0.0, 0.0);
 
             let f = clump (0.5 + 0.5 * dot_product(nx, ny, nz, lx, ly, lz), 0.0, 1.0);
-
 
             let cl = (f * 255.0) as u32;
             let color : u32 = (cl << 16) | (cl << 8) | cl;

@@ -4,7 +4,7 @@ extern crate rand;
 
 mod canvas;
 mod wavefront_obj;
-//use canvas;
+mod vec3;
 
 
 fn main() {
@@ -19,7 +19,6 @@ fn main() {
     c.clear();
     c.point(128, 128, 0xff0000);
 
-   
     c.line(  10,  10, 200,  20, 0xff0000);
     c.line( 10,  10,  20, 200, 0x00ff00);
 
@@ -32,12 +31,15 @@ fn main() {
     c.line( 20,  200, 200, 20,   0xff00ff);
 
     //c.daraw_triangle_list(vertex, index);
-    c.draw_solid_triangle_list(vertex, index);
-    //c.draw_solid_triangle(200, 200, 300, 251, 500, 201,  0xff00ff);
-    //c.draw_solid_triangle(200, 200,  500, 210,  300, 251,  0xff00ff);
-    //c.draw_solid_triangle(200, 200,  500, 210,  300, 151,  0xff00ff);
 
-    //c.draw_solid_triangle(500, 500,  500, 600,  600, 500,  0xff00ff);
+    c.draw_solid_triangle(
+        0.5, 0.5, 0.0,
+        0.0, 0.5, 0.0,
+        0.5, 0.0, 5.5, 0xffffff);
+
+    c.draw_solid_triangle_list(&vertex, &index, 0.2, vec3::vec3::new(0.0, -0.5, 1.0));
+    c.draw_solid_triangle_list(&vertex, &index, 0.2, vec3::vec3::new(0.3, -0.2, 1.5));
 
     c.wait_end();
+
 }
