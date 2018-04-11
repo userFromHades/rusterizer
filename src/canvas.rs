@@ -104,7 +104,7 @@ impl MyCanvas {
          self.sdl_canvas.clear();
     }
 
-    pub fn setDepth (&mut self, x: i32, y: i32, d : f32){
+    pub fn set_depth (&mut self, x: i32, y: i32, d : f32){
         if x < 0 ||
            y < 0 ||
            x >= (self.width as i32) ||
@@ -189,6 +189,7 @@ impl MyCanvas {
         )
     }
 
+    #[allow(dead_code)]
     pub fn daraw_triangle_list (&mut self, vertex : Vec<f32>, index:Vec<u32>){
         for i in 0..index.len()/3 {
             let idx0 = index[i * 3 + 0] - 1;
@@ -216,9 +217,9 @@ impl MyCanvas {
     }
 
 
-    pub fn draw_solid_triangle (&mut self, mut x0 : f32, mut y0 : f32, mut z0 : f32,
-                                           mut x1 : f32, mut y1 : f32, mut z1 : f32,
-                                           mut x2 : f32, mut y2 : f32, mut z2 : f32,
+    pub fn draw_solid_triangle (&mut self, x0 : f32, y0 : f32, z0 : f32,
+                                           x1 : f32, y1 : f32, z1 : f32,
+                                           x2 : f32, y2 : f32, z2 : f32,
                                            color : u32 )
     {
         let (x0,y0,z0, x1,y1,z1, x2,y2,z2) = sort_vertexes(x0,y0,z0, x1,y1,z1, x2,y2,z2);
@@ -252,7 +253,7 @@ impl MyCanvas {
             for y in _y0.._y1{
                 let _z = _z0 + (y - _y0) as f32 * kz;
                 if _z <  self.depth(x, y){
-                    self.setDepth(x, y, _z);
+                    self.set_depth(x, y, _z);
 
                     //let cl = (255.0 - _z * 100.0) as u32;
                     //let color : u32 = (cl << 16) | (cl << 8) | cl;
@@ -277,7 +278,7 @@ impl MyCanvas {
             for y in _y0.._y1{
                 let _z = _z0 + (y - _y0) as f32 * kz;
                 if _z <  self.depth(x, y){
-                    self.setDepth(x, y, _z);
+                    self.set_depth(x, y, _z);
 
                     //let cl = (255.0 - _z * 100.0) as u32;
                     //let color : u32 = (cl << 16) | (cl << 8) | cl;
@@ -291,10 +292,9 @@ impl MyCanvas {
         vertex : &Vec<f32>,
         index  : &Vec<u32>,
         scale : f32,
-        offset : vec3::vec3)
+        offset : vec3::Vec3)
     {
 
-        let mut rng = rand::thread_rng();
         for i in 0..index.len()/3 {
 
             let idx0 = index[i * 3 + 0] - 1;
@@ -344,7 +344,7 @@ impl MyCanvas {
         let mut texture = texture_creator.create_texture_streaming(
         PixelFormatEnum::RGB24, self.width, self.height).unwrap();
 
-        texture.with_lock(None, |buffer: &mut [u8], pitch: usize| {
+        texture.with_lock(None, |buffer: &mut [u8], _: usize| {
             let n = (self.width * self.height * 3) as usize;
             for i in 0..n {
                 buffer[i] = self.rgb_buffer[i];
