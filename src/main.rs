@@ -37,9 +37,9 @@ fn main() {
     //c.daraw_triangle_list(vertex, index);
 
     c.draw_solid_triangle(
-        0.5, 0.5, 0.0,
-        0.0, 0.5, 0.0,
-        0.5, 0.0, 5.5, 0xffffff);
+        vec3::Vec3::new(0.5, 0.5, 0.0),
+        vec3::Vec3::new(0.0, 0.5, 0.0),
+        vec3::Vec3::new(0.5, 0.0, 5.5), 0xffffff);
 
     teaport.draw(&mut c, 0.2, vec3::Vec3::new(0.0, -0.5, 1.0));
     teaport.draw(&mut c, 0.2, vec3::Vec3::new(0.3, -0.2, 1.5));

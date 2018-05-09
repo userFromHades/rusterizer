@@ -66,6 +66,13 @@ impl Mesh {
 		Mesh { vertex : vertex, index : index, vertex_type : vertex_type }
 	}
 
+	fn get_position (&self, index : usize) -> vec3::Vec3 {
+		let count = self.vertex_type.count();
+		vec3::Vec3::new( self.vertex[(index * count + 0) as usize],
+		                 self.vertex[(index * count + 1) as usize],
+		                 self.vertex[(index * count + 2) as usize])
+	}
+
     pub fn draw (& self,
                  c : &mut canvas::MyCanvas, 
                  scale : f32,
@@ -82,23 +89,13 @@ impl Mesh {
             let idx1 = (index[i * 3 + 1]) as usize;
             let idx2 = (index[i * 3 + 2]) as usize;
 
-            let x0 = scale * vertex[(idx0 * count + 0) as usize] + offset.x;
-            let y0 = scale * vertex[(idx0 * count + 1) as usize] + offset.y;
-            let z0 = scale * vertex[(idx0 * count + 2) as usize] + offset.z;
+			let p0 = &self.get_position(idx0).scaled(scale) + &offset;
+			let p1 = &self.get_position(idx1).scaled(scale) + &offset;
+			let p2 = &self.get_position(idx2).scaled(scale) + &offset;
 
-            let x1 = scale * vertex[(idx1 * count + 0) as usize] + offset.x;
-            let y1 = scale * vertex[(idx1 * count + 1) as usize] + offset.y;
-            let z1 = scale * vertex[(idx1 * count + 2) as usize] + offset.z;
-
-            let x2 = scale * vertex[(idx2 * count + 0) as usize] + offset.x;
-            let y2 = scale * vertex[(idx2 * count + 1) as usize] + offset.y;
-            let z2 = scale * vertex[(idx2 * count + 2) as usize] + offset.z;
-
-            let (vx1, vy1, vz1 ) = (x1 - x0, y1 - y0, z1 - z0);
-            let (vx2, vy2, vz2 ) = (x2 - x0, y2 - y0, z2 - z0);
-
-            let n = vec3::cross_product (vec3::Vec3::new(vx1, vy1, vz1), 
-                                         vec3::Vec3::new(vx2, vy2, vz2) ).normalized();
+			let v1 = &p1 - &p0;
+			let v2 = &p2 - &p0;
+			let n = vec3::cross_product (v1, v2).normalized();
 
             if n.z >= 0.0 {
                 continue;
@@ -111,8 +108,7 @@ impl Mesh {
             let cl = (f * 255.0) as u32;
             let color : u32 = (cl << 16) | (cl << 8) | cl;
 
-            c.draw_solid_triangle (x0, y0, z0, x1, y1, z1, x2, y2, z2, color);
+			c.draw_solid_triangle (p0, p1, p2, color);
         }
     }
-
 }

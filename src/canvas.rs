@@ -10,30 +10,24 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
 
+use vec3;
 
-fn sort_vertexes (mut x0 : f32, mut y0 : f32, mut z0 : f32,
-                    mut x1 : f32, mut y1 : f32, mut z1 : f32,
-                    mut x2 : f32, mut y2 : f32, mut z2 : f32) ->
-                    (f32, f32, f32,
-                    f32, f32, f32,
-                    f32, f32, f32)
+fn sort_vertexes ( mut p0 : vec3::Vec3,
+                   mut p1 : vec3::Vec3,
+                   mut p2 : vec3::Vec3) ->
+                (vec3::Vec3, vec3::Vec3, vec3::Vec3)
 {
-    if x0 > x1 {
-        mem::swap(&mut x0, &mut x1);
-        mem::swap(&mut y0, &mut y1);
-        mem::swap(&mut z0, &mut z1);
-    }
-    if x0 > x2 {
-        mem::swap(&mut x0, &mut x2);
-        mem::swap(&mut y0, &mut y2);
-        mem::swap(&mut z0, &mut z2);
-    }
-    if x1 > x2 {
-        mem::swap(&mut x1, &mut x2);
-        mem::swap(&mut y1, &mut y2);
-        mem::swap(&mut z1, &mut z2);
-    }
-    (x0,y0,z0, x1,y1,z1, x2,y2,z2)
+	if p0.x > p1.x {
+		mem::swap(&mut p0, &mut p1);
+	}
+	if p0.x > p2.x {
+		mem::swap(&mut p0, &mut p2);
+	}
+	if p1.x > p2.x {
+		mem::swap(&mut p1, &mut p2);
+	}
+
+	(p0, p1, p2)
 }
 
 
@@ -189,22 +183,24 @@ impl MyCanvas {
         }
     }
 
+	pub fn draw_solid_triangle (&mut self, p0 : vec3::Vec3,
+										p1 : vec3::Vec3,
+										p2 : vec3::Vec3,
+										color : u32 )
+	{
+		let (p0, p1, p2) = sort_vertexes(p0, p1, p2);
 
-    pub fn draw_solid_triangle (&mut self, x0 : f32, y0 : f32, z0 : f32,
-                                           x1 : f32, y1 : f32, z1 : f32,
-                                           x2 : f32, y2 : f32, z2 : f32,
-                                           color : u32 )
-    {
-        let (x0,y0,z0, x1,y1,z1, x2,y2,z2) = sort_vertexes(x0,y0,z0, x1,y1,z1, x2,y2,z2);
-
-        let (x0, y0) = self.to_pix_coord(x0, y0);
-        let (x1, y1) = self.to_pix_coord(x1, y1);
-        let (x2, y2) = self.to_pix_coord(x2, y2);
-
+		let (x0, y0) = self.to_pix_coord(p0.x, p0.y);
+		let (x1, y1) = self.to_pix_coord(p1.x, p1.y);
+		let (x2, y2) = self.to_pix_coord(p2.x, p2.y);
 
         let ky10 = (y1 - y0) as f32 / (x1 - x0) as f32;
         let ky21 = (y2 - y1) as f32 / (x2 - x1) as f32;
         let ky20 = (y2 - y0) as f32 / (x2 - x0) as f32;
+
+		let z0 = p0.z;
+		let z1 = p1.z;
+		let z2 = p2.z;
 
         let kz10 = (z1 - z0) as f32 / (x1 - x0) as f32;
         let kz21 = (z2 - z1) as f32 / (x2 - x1) as f32;
@@ -260,7 +256,6 @@ impl MyCanvas {
             }
         }
     }
-
 
     pub fn wait_end (&mut self) {
 
