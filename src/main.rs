@@ -2,14 +2,18 @@
 extern crate sdl2;
 extern crate rand;
 
+#[macro_use]
+extern crate bitflags;
+
 mod canvas;
 mod wavefront_obj;
 mod vec3;
-
+mod mesh;
 
 fn main() {
 
-    let (vertex, index) = wavefront_obj::load_from_file("./teapot.obj");
+    let teaport = wavefront_obj::load_from_file("./teapot.obj");
+    let head = wavefront_obj::load_from_file("./african_head.obj");
 
     println!("Hello, world!");
     //canvas::test();
@@ -37,8 +41,9 @@ fn main() {
         0.0, 0.5, 0.0,
         0.5, 0.0, 5.5, 0xffffff);
 
-    c.draw_solid_triangle_list(&vertex, &index, 0.2, vec3::vec3::new(0.0, -0.5, 1.0));
-    c.draw_solid_triangle_list(&vertex, &index, 0.2, vec3::vec3::new(0.3, -0.2, 1.5));
+    teaport.draw(&mut c, 0.2, vec3::Vec3::new(0.0, -0.5, 1.0));
+    teaport.draw(&mut c, 0.2, vec3::Vec3::new(0.3, -0.2, 1.5));
+    head.draw   (&mut c, 0.5, vec3::Vec3::new(-0.5, 0.0, 0.5));
 
     c.wait_end();
 

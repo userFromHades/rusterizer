@@ -6,3 +6,4 @@ authors = ["userFromHades <justForWork113@gmail.com>"]
 [dependencies]
 rand = "0.3.0"
 sdl2 = "*"
+bitflags = "1.0"

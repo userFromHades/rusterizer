@@ -10,33 +10,6 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
 
-use vec3;
-
-fn normalise( x : f32, y : f32, z : f32) ->(f32, f32, f32) {
-    let l = (x * x + y * y + z * z ).sqrt();
-    (x / l, y / l, z / l)
-}
-
-fn dot_product(x1 : f32, y1 : f32, z1 : f32,
-               x2 : f32, y2 : f32, z2 : f32) -> f32{
-    x1 * x2 + y1 * y2 + z1 * z2
-}
-
-fn cross_product(x1 : f32, y1 : f32, z1 : f32,
-                 x2 : f32, y2 : f32, z2 : f32) -> (f32, f32, f32){
-    (y1 * z2 - z1 * y2,
-     z1 * x2 - x1 * z2,
-     x1 * y2 - y1 * x2)
-}
-
-fn clump (x : f32, a :f32, b: f32) -> f32 {
-    if x < a{
-        a
-    }else if x > b {
-        b
-    }
-    else {x}
-}
 
 fn sort_vertexes (mut x0 : f32, mut y0 : f32, mut z0 : f32,
                     mut x1 : f32, mut y1 : f32, mut z1 : f32,
@@ -288,53 +261,6 @@ impl MyCanvas {
         }
     }
 
-    pub fn draw_solid_triangle_list (&mut self,
-        vertex : &Vec<f32>,
-        index  : &Vec<u32>,
-        scale : f32,
-        offset : vec3::Vec3)
-    {
-
-        for i in 0..index.len()/3 {
-
-            let idx0 = index[i * 3 + 0] - 1;
-            let idx1 = index[i * 3 + 1] - 1;
-            let idx2 = index[i * 3 + 2] - 1;
-
-            let x0 = scale * vertex[(idx0 * 3 + 0) as usize] + offset.x;
-            let y0 = scale * vertex[(idx0 * 3 + 1) as usize] + offset.y;
-            let z0 = scale * vertex[(idx0 * 3 + 2) as usize] + offset.z;
-
-            let x1 = scale * vertex[(idx1 * 3 + 0) as usize] + offset.x;
-            let y1 = scale * vertex[(idx1 * 3 + 1) as usize] + offset.y;
-            let z1 = scale * vertex[(idx1 * 3 + 2) as usize] + offset.z;
-
-            let x2 = scale * vertex[(idx2 * 3 + 0) as usize] + offset.x;
-            let y2 = scale * vertex[(idx2 * 3 + 1) as usize] + offset.y;
-            let z2 = scale * vertex[(idx2 * 3 + 2) as usize] + offset.z;
-
-            let (vx1, vy1, vz1 ) = (x1 - x0, y1 - y0, z1 - z0);
-            let (vx2, vy2, vz2 ) = (x2 - x0, y2 - y0, z2 - z0);
-
-            let (nx, ny, nz) = cross_product(vx1, vy1, vz1, vx2, vy2, vz2);
-
-            let (nx, ny, nz) = normalise (nx, ny, nz);
-
-            if nz >= 0.0 {
-                continue;
-            }
-
-            let (lx, ly, lz) = normalise(1.0, 0.0, 0.0);
-
-            let f = clump (0.5 + 0.5 * dot_product(nx, ny, nz, lx, ly, lz), 0.0, 1.0);
-
-            let cl = (f * 255.0) as u32;
-            let color : u32 = (cl << 16) | (cl << 8) | cl;
-
-            self.draw_solid_triangle (x0, y0, z0, x1, y1, z1, x2, y2, z2, color);
-        }
-         println!("end");
-    }
 
     pub fn wait_end (&mut self) {
 
