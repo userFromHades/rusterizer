@@ -10,12 +10,20 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
 
-use vec3;
+use vec;
 
-fn sort_vertexes ( mut p0 : vec3::Vec3,
-                   mut p1 : vec3::Vec3,
-                   mut p2 : vec3::Vec3) ->
-                (vec3::Vec3, vec3::Vec3, vec3::Vec3)
+pub struct Texture {}
+
+impl Texture {
+	pub fn get (&self, x : f32, y : f32) ->u32{
+		(((255.0 * x) as u32) << 8) | ((255.0 * y) as u32)
+	}
+}
+
+fn sort_vertexes ( mut p0 : vec::Vec3,
+                   mut p1 : vec::Vec3,
+                   mut p2 : vec::Vec3) ->
+                (vec::Vec3, vec::Vec3, vec::Vec3)
 {
 	if p0.x > p1.x {
 		mem::swap(&mut p0, &mut p1);
@@ -30,6 +38,27 @@ fn sort_vertexes ( mut p0 : vec3::Vec3,
 	(p0, p1, p2)
 }
 
+fn sort_vertexes_ (
+    mut p0 : vec::Vec3,  mut p1 : vec::Vec3,  mut p2 : vec::Vec3,
+    mut t0 : vec::Vec2,  mut t1 : vec::Vec2,  mut t2 : vec::Vec2) ->
+    (vec::Vec3, vec::Vec3, vec::Vec3,
+     vec::Vec2, vec::Vec2, vec::Vec2)
+{
+	if p0.x > p1.x {
+		mem::swap(&mut p0, &mut p1);
+		mem::swap(&mut t0, &mut t1);
+	}
+	if p0.x > p2.x {
+		mem::swap(&mut p0, &mut p2);
+		mem::swap(&mut t0, &mut t2);
+	}
+	if p1.x > p2.x {
+		mem::swap(&mut p1, &mut p2);
+		mem::swap(&mut t1, &mut t2);
+	}
+
+	(p0, p1, p2, t0, t1, t2)
+}
 
 pub struct MyCanvas {
 	sdl_context : sdl2::Sdl,
@@ -40,6 +69,8 @@ pub struct MyCanvas {
 
 	rgb_buffer: Vec<u8>,
 	z_buffer: Vec<f32>,
+
+	pub texture : Texture,
 
 }
 
@@ -63,8 +94,13 @@ impl MyCanvas {
 			width: width,
 			height: height,
 			rgb_buffer: vec![0; (width * height * 3) as usize],
-			z_buffer: vec![100000.0; (width * height) as usize]
+			z_buffer: vec![100000.0; (width * height) as usize],
+			texture : Texture {},
 		}
+	}
+
+	pub fn set_texture(&mut self){
+
 	}
 
 	pub fn clear(&mut self) {
@@ -183,10 +219,10 @@ impl MyCanvas {
 		}
 	}
 
-	pub fn draw_solid_triangle (&mut self, p0 : vec3::Vec3,
-										   p1 : vec3::Vec3,
-										   p2 : vec3::Vec3,
-										   color : u32 )
+	pub fn draw_solid_triangle (&mut self, p0 : vec::Vec3,
+	                                       p1 : vec::Vec3,
+	                                       p2 : vec::Vec3,
+	                                       color : u32 )
 	{
 		let (p0, p1, p2) = sort_vertexes(p0, p1, p2);
 
@@ -245,6 +281,121 @@ impl MyCanvas {
 				let _z = _z0 + (y - _y0) as f32 * kz;
 				if _z <  self.depth(x, y){
 					self.set_depth(x, y, _z);
+					self.point(x, y, color);
+				}
+			}
+		}
+	}
+
+	pub fn draw_textured_triangle (&mut self,
+	    p0 : vec::Vec3, t0 : vec::Vec2,
+	    p1 : vec::Vec3, t1 : vec::Vec2,
+	    p2 : vec::Vec3, t2 : vec::Vec2
+	    )
+	{
+		let (p0, p1, p2, t0, t1, t2) = sort_vertexes_(p0, p1, p2, t0, t1, t2 );
+
+		let (x0, y0) = self.to_pix_coord(p0.x, p0.y);
+		let (x1, y1) = self.to_pix_coord(p1.x, p1.y);
+		let (x2, y2) = self.to_pix_coord(p2.x, p2.y);
+
+		let ky10 = (y1 - y0) as f32 / (x1 - x0) as f32;
+		let ky21 = (y2 - y1) as f32 / (x2 - x1) as f32;
+		let ky20 = (y2 - y0) as f32 / (x2 - x0) as f32;
+
+		let z0 = p0.z;
+		let z1 = p1.z;
+		let z2 = p2.z;
+
+		let kz10 = (z1 - z0) as f32 / (x1 - x0) as f32;
+		let kz21 = (z2 - z1) as f32 / (x2 - x1) as f32;
+		let kz20 = (z2 - z0) as f32 / (x2 - x0) as f32;
+
+		let tx0 = t0.x;
+		let tx1 = t1.x;
+		let tx2 = t2.x;
+
+		let ktx10 = (tx1 - tx0) as f32 / (x1 - x0) as f32;
+		let ktx21 = (tx2 - tx1) as f32 / (x2 - x1) as f32;
+		let ktx20 = (tx2 - tx0) as f32 / (x2 - x0) as f32;
+
+		let ty0 = t0.y;
+		let ty1 = t1.y;
+		let ty2 = t2.y;
+
+		let kty10 = (ty1 - ty0) as f32 / (x1 - x0) as f32;
+		let kty21 = (ty2 - ty1) as f32 / (x2 - x1) as f32;
+		let kty20 = (ty2 - ty0) as f32 / (x2 - x0) as f32;
+
+		for x in x0..x1{
+			let mut _y0 = y0 + (ky20 * (x - x0) as f32) as i32;
+			let mut _y1 = y0 + (ky10 * (x - x0) as f32) as i32;
+
+			let mut _z0 = z0 + (kz20 * (x - x0) as f32) ;
+			let mut _z1 = z0 + (kz10 * (x - x0) as f32) ;
+
+			let mut _tx0 = tx0 + (ktx20 * (x - x0) as f32) ;
+			let mut _tx1 = tx0 + (ktx10 * (x - x0) as f32) ;
+
+			let mut _ty0 = ty0 + (kty20 * (x - x0) as f32) ;
+			let mut _ty1 = ty0 + (kty10 * (x - x0) as f32) ;
+
+			if _y0 > _y1{
+				mem::swap(&mut _y0,   &mut _y1);
+				mem::swap(&mut _z0,   &mut _z1);
+				mem::swap(&mut _tx0, &mut _tx1);
+				mem::swap(&mut _ty0, &mut _ty1);
+			}
+
+			let dy = (_y1 - _y0) as f32;
+			let kz  = (_z1 - _z0)     / dy;
+			let ktx = (_tx1 - _tx0) / dy;
+			let kty = (_ty1 - _ty0) / dy;
+			for y in _y0.._y1{
+				let dy = (y - _y0) as f32;
+				let _z  = _z0   + dy * kz;
+				let _tx = _tx0 + dy * ktx;
+				let _ty = _ty0 + dy * kty;
+				if _z <  self.depth(x, y){
+					self.set_depth(x, y, _z);
+					let color = self.texture.get(_tx, _ty);
+					self.point(x, y, color);
+				}
+			}
+		}
+
+		for x in x1..(x2 ){
+			let mut _y0 = y0 + (ky20 * (x - x0) as f32) as i32;
+			let mut _y1 = y1 + (ky21 * (x - x1) as f32) as i32;
+
+			let mut _z0 = z0 + (kz20 * (x - x0) as f32) ;
+			let mut _z1 = z1 + (kz21 * (x - x1) as f32) ;
+
+			let mut _tx0 = tx0 + (ktx20 * (x - x0) as f32) ;
+			let mut _tx1 = tx1 + (ktx21 * (x - x0) as f32) ;
+
+			let mut _ty0 = ty0 + (kty20 * (x - x0) as f32) ;
+			let mut _ty1 = ty1 + (kty21 * (x - x0) as f32) ;
+
+			if _y0 > _y1{
+				mem::swap(&mut _y0,   &mut _y1);
+				mem::swap(&mut _z0,   &mut _z1);
+				mem::swap(&mut _tx0, &mut _tx1);
+				mem::swap(&mut _ty0, &mut _ty1);
+			}
+
+			let dy = (_y1 - _y0) as f32;
+			let kz  = (_z1   - _z0) / dy;
+			let ktx = (_tx1 - _tx0) / dy;
+			let kty = (_ty1 - _ty0) / dy;
+			for y in _y0.._y1{
+				let dy = (y - _y0) as f32;
+				let _z  = _z0   + dy * kz;
+				let _tx = _tx0 + dy * ktx;
+				let _ty = _ty0 + dy * kty;
+				if _z <  self.depth(x, y){
+					self.set_depth(x, y, _z);
+					let color = self.texture.get(_tx, _ty);
 					self.point(x, y, color);
 				}
 			}

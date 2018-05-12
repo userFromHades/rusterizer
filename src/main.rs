@@ -7,7 +7,7 @@ extern crate bitflags;
 
 mod canvas;
 mod wavefront_obj;
-mod vec3;
+mod vec;
 mod mesh;
 
 fn main() {
@@ -36,14 +36,14 @@ fn main() {
 
 	//c.daraw_triangle_list(vertex, index);
 
-	c.draw_solid_triangle(
-	    vec3::Vec3::new(0.5, 0.5, 0.0),
-	    vec3::Vec3::new(0.0, 0.5, 0.0),
-	    vec3::Vec3::new(0.5, 0.0, 5.5), 0xffffff);
+	c.draw_textured_triangle(
+	    vec::Vec3::new(0.5, 0.5, 0.0), vec::Vec2{x: 1.0, y : 1.0},
+	    vec::Vec3::new(0.0, 0.5, 0.0), vec::Vec2{x: 0.0, y : 1.0},
+	    vec::Vec3::new(0.5, 0.0, 0.0), vec::Vec2{x: 1.0, y : 0.0});
 
-	teaport.draw(&mut c, 0.2, vec3::Vec3::new(0.0, -0.5, 1.0));
-	teaport.draw(&mut c, 0.2, vec3::Vec3::new(0.3, -0.2, 1.5));
-	head.draw   (&mut c, 0.5, vec3::Vec3::new(-0.5, 0.0, 0.5));
+	teaport.draw(&mut c, 0.2, vec::Vec3::new(0.0, -0.5, 1.0));
+	teaport.draw(&mut c, 0.2, vec::Vec3::new(0.3, -0.2, 1.5));
+	head.draw   (&mut c, 0.5, vec::Vec3::new(-0.5, 0.0, 0.5));
 
 	c.wait_end();
 

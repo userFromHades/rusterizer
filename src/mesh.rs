@@ -1,5 +1,5 @@
 use canvas;
-use vec3;
+use vec;
 //#[macro_use]
 //extern crate bitflags;
 
@@ -66,17 +66,23 @@ impl Mesh {
 		Mesh { vertex : vertex, index : index, vertex_type : vertex_type }
 	}
 
-	fn get_position (&self, index : usize) -> vec3::Vec3 {
+	fn get_position (&self, index : usize) -> vec::Vec3 {
 		let count = self.vertex_type.count();
-		vec3::Vec3::new( self.vertex[(index * count + 0) as usize],
+		vec::Vec3::new(  self.vertex[(index * count + 0) as usize],
 		                 self.vertex[(index * count + 1) as usize],
 		                 self.vertex[(index * count + 2) as usize])
 	}
 
+	fn get_tex_coord (&self, index : usize) -> vec::Vec2 {
+		let count = self.vertex_type.count();
+		vec::Vec2::new(  self.vertex[(index * count + 3) as usize],
+		                 self.vertex[(index * count + 4) as usize])
+	}
+
 	pub fn draw (& self,
-	             c : &mut canvas::MyCanvas, 
+	             c : &mut canvas::MyCanvas,
 	             scale : f32,
-	             offset : vec3::Vec3) 
+	             offset : vec::Vec3)
 	{
 		let index  = & self.index;
 		let vertex = & self.vertex;
@@ -95,20 +101,28 @@ impl Mesh {
 
 			let v1 = &p1 - &p0;
 			let v2 = &p2 - &p0;
-			let n = vec3::cross_product (v1, v2).normalized();
+			let n = vec::cross_product (v1, v2).normalized();
 
 			if n.z >= 0.0 {
 				continue;
 			}
 
-			let l = vec3::Vec3::new(1.0, 0.0, 0.0).normalized();
+			let l = vec::Vec3::new(1.0, 0.0, 0.0).normalized();
 
-			let f = clump (0.5 + 0.5 * vec3::dot_product(n, l), 0.0, 1.0);
+			let f = clump (0.5 + 0.5 * vec::dot_product(n, l), 0.0, 1.0);
 
 			let cl = (f * 255.0) as u32;
 			let color : u32 = (cl << 16) | (cl << 8) | cl;
 
-			c.draw_solid_triangle (p0, p1, p2, color);
+			if (self.vertex_type & VertexType::TEXTURE).is_empty() {
+				c.draw_solid_triangle (p0, p1, p2, color);
+			}
+			else{
+				let t0 = self.get_tex_coord(idx0);
+				let t1 = self.get_tex_coord(idx1);
+				let t2 = self.get_tex_coord(idx2);
+				c.draw_textured_triangle(p0, t0, p1, t1, p2, t2);
+			}
 		}
 	}
 }
