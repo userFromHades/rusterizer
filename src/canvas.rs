@@ -351,7 +351,7 @@ impl MyCanvas {
 			}
 
 			let dy = (_y1 - _y0) as f32;
-			let kz  = (_z1 - _z0)     / dy;
+			let kz  = (_z1 - _z0)   / dy;
 			let ktx = (_tx1 - _tx0) / dy;
 			let kty = (_ty1 - _ty0) / dy;
 			for y in _y0.._y1{
@@ -375,10 +375,10 @@ impl MyCanvas {
 			let mut _z1 = z1 + (kz21 * (x - x1) as f32) ;
 
 			let mut _tx0 = tx0 + (ktx20 * (x - x0) as f32) ;
-			let mut _tx1 = tx1 + (ktx21 * (x - x0) as f32) ;
+			let mut _tx1 = tx1 + (ktx21 * (x - x1) as f32) ;
 
 			let mut _ty0 = ty0 + (kty20 * (x - x0) as f32) ;
-			let mut _ty1 = ty1 + (kty21 * (x - x0) as f32) ;
+			let mut _ty1 = ty1 + (kty21 * (x - x1) as f32) ;
 
 			if _y0 > _y1{
 				mem::swap(&mut _y0,   &mut _y1);
@@ -388,7 +388,7 @@ impl MyCanvas {
 			}
 
 			let dy = (_y1 - _y0) as f32;
-			let kz  = (_z1   - _z0) / dy;
+			let kz  = (_z1  - _z0) / dy;
 			let ktx = (_tx1 - _tx0) / dy;
 			let kty = (_ty1 - _ty0) / dy;
 			for y in _y0.._y1{
