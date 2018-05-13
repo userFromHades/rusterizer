@@ -3,7 +3,6 @@ use std::time;
 use std::mem;
 
 extern crate rand;
-
 extern crate sdl2;
 
 use sdl2::pixels::PixelFormatEnum;
@@ -11,14 +10,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
 
 use vec;
-
-pub struct Texture {}
-
-impl Texture {
-	pub fn get (&self, x : f32, y : f32) ->u32{
-		(((255.0 * x) as u32) << 8) | ((255.0 * y) as u32)
-	}
-}
+use texture;
 
 fn sort_vertexes ( mut p0 : vec::Vec3,
                    mut p1 : vec::Vec3,
@@ -70,7 +62,7 @@ pub struct MyCanvas {
 	rgb_buffer: Vec<u8>,
 	z_buffer: Vec<f32>,
 
-	pub texture : Texture,
+	pub texture : Option<texture::Texture>,
 
 }
 
@@ -95,12 +87,23 @@ impl MyCanvas {
 			height: height,
 			rgb_buffer: vec![0; (width * height * 3) as usize],
 			z_buffer: vec![100000.0; (width * height) as usize],
-			texture : Texture {},
+			texture : None,
 		}
 	}
 
-	pub fn set_texture(&mut self){
+	pub fn set_texture(&mut self, t: texture::Texture){
+		self.texture = Some(t);
+	}
 
+/*	pub fn get_texture (&mut self) -> Option<texture::Texture> {
+		self.texture
+	}
+*/
+	pub fn get_tex_colour (&mut self, x : f32, y : f32) -> u32 {
+		return if self.texture.is_some(){
+			let t = self.texture.as_ref().unwrap();
+			t.get(x, y)
+		} else { 0x777777 };
 	}
 
 	pub fn clear(&mut self) {
@@ -358,7 +361,7 @@ impl MyCanvas {
 				let _ty = _ty0 + dy * kty;
 				if _z <  self.depth(x, y){
 					self.set_depth(x, y, _z);
-					let color = self.texture.get(_tx, _ty);
+					let color = self.get_tex_colour(_tx, _ty);
 					self.point(x, y, color);
 				}
 			}
@@ -395,7 +398,7 @@ impl MyCanvas {
 				let _ty = _ty0 + dy * kty;
 				if _z <  self.depth(x, y){
 					self.set_depth(x, y, _z);
-					let color = self.texture.get(_tx, _ty);
+					let color = self.get_tex_colour(_tx, _ty);
 					self.point(x, y, color);
 				}
 			}

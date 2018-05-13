@@ -13,8 +13,6 @@ fn clump (x : f32, a :f32, b: f32) -> f32 {
 	else {x}
 }
 
-
-
 bitflags! {
 	pub struct VertexType: u32 {
 		const POSITION = 0b00000001;
