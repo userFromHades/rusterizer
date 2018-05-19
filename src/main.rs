@@ -42,7 +42,6 @@ fn main() {
 	//c.line( 200, 20, 20,  200,  0xff00ff);
 	c.line( 20,  200, 200, 20,   0xff00ff);
 
-	c.set_texture(head_t);
 	/*
 	c.draw_textured_triangle(
 	    vec::Vec3::new(0.6, 0.6, 0.0), vec::Vec2{x: 1.0, y : 1.0},
@@ -54,9 +53,14 @@ fn main() {
 	    vec::Vec3::new(0.5, 0.0, 0.0), vec::Vec2{x: 1.0, y : 0.0});
 	*/
 
-	teaport.draw(&mut c, 0.2, vec::Vec3::new(0.0, -0.5, 1.0));
-	teaport.draw(&mut c, 0.2, vec::Vec3::new(0.3, -0.2, 1.5));
-	head.draw   (&mut c, 0.5, vec::Vec3::new(-0.5, 0.0, 0.5));
+	let m1 = vec::Mat4x4::scale(0.5, 0.5, 0.5) * vec::Mat4x4::translation(0.0, -0.5, 5.0) * vec::Mat4x4::retro_proj(0.45);
+	let m2 = vec::Mat4x4::scale(0.5, 0.5, 0.5) * vec::Mat4x4::translation(0.3, 0.2, 8.5) * vec::Mat4x4::retro_proj(0.45);
+	teaport.draw(&mut c, &m1);
+	teaport.draw(&mut c, &m2);
+
+	c.set_texture(head_t);
+	let m1 = vec::Mat4x4::y_rotation(3.141592) * vec::Mat4x4::translation(-0.3,- 0.2, 1.5) * vec::Mat4x4::retro_proj(0.45);
+	head.draw   (&mut c, &m1);
 
 	c.wait_end();
 

@@ -22,6 +22,8 @@ bitflags! {
 }
 
 impl VertexType {
+
+	#[warn(dead_code)]
 	pub fn size (self) -> usize {
 		let mut size : usize = 0;
 		if ! (self &  VertexType::POSITION).is_empty() {
@@ -36,6 +38,7 @@ impl VertexType {
 		size
 	}
 
+	#[warn(dead_code)]
 	pub fn count (self) -> usize {
 		let mut size : usize = 0;
 		if ! (self &  VertexType::POSITION).is_empty() {
@@ -79,8 +82,7 @@ impl Mesh {
 
 	pub fn draw (& self,
 	             c : &mut canvas::MyCanvas,
-	             scale : f32,
-	             offset : vec::Vec3)
+	             transform : &vec::Mat4x4)
 	{
 		let index  = & self.index;
 		let vertex = & self.vertex;
@@ -93,9 +95,9 @@ impl Mesh {
 			let idx1 = (index[i * 3 + 1]) as usize;
 			let idx2 = (index[i * 3 + 2]) as usize;
 
-			let p0 = &self.get_position(idx0).scaled(scale) + &offset;
-			let p1 = &self.get_position(idx1).scaled(scale) + &offset;
-			let p2 = &self.get_position(idx2).scaled(scale) + &offset;
+			let p0 = transform.apply(&self.get_position(idx0));
+			let p1 = transform.apply(&self.get_position(idx1));
+			let p2 = transform.apply(&self.get_position(idx2));
 
 			let v1 = &p1 - &p0;
 			let v2 = &p2 - &p0;

@@ -33,12 +33,12 @@ pub fn load_from_file (file_name : &str) -> Result< texture::Texture, io::Error 
 	let colourmap_type = take::<u8>(&f)?;
 	let datatype_code= take::<u8>(&f)?;
 
-	let colour_map_origin = take::<i16>(&f)?;
-	let colour_map_length = take::<i16>(&f)?;
+	let _colour_map_origin = take::<i16>(&f)?;
+	let _colour_map_length = take::<i16>(&f)?;
 	let colour_map_depth = take::<u8>(&f)?;
 
-	let x_origin= take::<i16>(&f)?;
-	let y_origin= take::<i16>(&f)?;
+	let _x_origin= take::<i16>(&f)?;
+	let _y_origin= take::<i16>(&f)?;
 	let width= take::<u16>(&f)? as usize;
 	let height= take::<u16>(&f)? as usize;
 	let bits_per_pixel = take::<u8>(&f)? as usize;
