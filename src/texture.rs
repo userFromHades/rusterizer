@@ -31,8 +31,12 @@ impl Texture {
 	pub fn get (&self, x : f32, y : f32) ->u32{
 
 		let x = (self.width - 1) as f32 * x;
+		let x = x as usize % self.width;
+
 		let y = (self.height - 1) as f32 * y;
-		let i = (x as usize) + (y as usize) * self.width;
+		let y = y as usize % self.height;
+
+		let i = x  + y * self.width;
 		let n = i * self.color_type.size();
 
 		( (self.data[n + 2] as u32) << 16) | ((self.data[n + 1] as u32) << 8) | (self.data[n + 0] as u32 )

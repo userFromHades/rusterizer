@@ -42,15 +42,16 @@ fn main() {
 	//c.line( 200, 20, 20,  200,  0xff00ff);
 	c.line( 20,  200, 200, 20,   0xff00ff);
 
+	c.set_texture(head_t);
 	/*
 	c.draw_textured_triangle(
-	    vec::Vec3::new(0.6, 0.6, 0.0), vec::Vec2{x: 1.0, y : 1.0},
-	    vec::Vec3::new(0.0, 0.5, 0.0), vec::Vec2{x: 0.0, y : 1.0},
-	    vec::Vec3::new(0.5, 0.0, 0.0), vec::Vec2{x: 1.0, y : 0.0});
+	    mesh::Vertex{ x:  0.6, y:  0.6, z: 0.0, tx: 1.0, ty: 1.0, nx: 0.0, ny: 0.0, nz: 0.0},
+	    mesh::Vertex{ x: -0.4, y:  0.5, z: 7.5, tx: 0.0, ty: 1.0, nx: 0.0, ny: 0.0, nz: 0.0},
+	    mesh::Vertex{ x:  0.5, y: -0.4, z: 0.0, tx: 1.0, ty: 0.0, nx: 0.0, ny: 0.0, nz: 0.0});
 	c.draw_textured_triangle(
-	    vec::Vec3::new(0.1, 0.1, 0.0), vec::Vec2{x: 0.0, y : 0.0},
-	    vec::Vec3::new(0.0, 0.5, 0.0), vec::Vec2{x: 0.0, y : 1.0},
-	    vec::Vec3::new(0.5, 0.0, 0.0), vec::Vec2{x: 1.0, y : 0.0});
+	    mesh::Vertex{ x: -0.5, y: -0.5, z: 0.0, tx: 0.0, ty: 0.0, nx: 0.0, ny: 0.0, nz: 0.0},
+	    mesh::Vertex{ x: -0.4, y:  0.5, z: 7.5, tx: 0.0, ty: 1.0, nx: 0.0, ny: 0.0, nz: 0.0},
+	    mesh::Vertex{ x:  0.5, y: -0.4, z: 0.0, tx: 1.0, ty: 0.0, nx: 0.0, ny: 0.0, nz: 0.0});
 	*/
 
 	let m1 = vec::Mat4x4::scale(0.5, 0.5, 0.5) * vec::Mat4x4::translation(0.0, -0.5, 5.0) * vec::Mat4x4::retro_proj(0.45);
@@ -58,7 +59,7 @@ fn main() {
 	teaport.draw(&mut c, &m1);
 	teaport.draw(&mut c, &m2);
 
-	c.set_texture(head_t);
+	//c.set_texture(head_t);
 	let m1 = vec::Mat4x4::y_rotation(3.141592) * vec::Mat4x4::translation(-0.3,- 0.2, 1.5) * vec::Mat4x4::retro_proj(0.45);
 	head.draw   (&mut c, &m1);
 
