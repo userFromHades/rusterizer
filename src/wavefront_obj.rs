@@ -2,10 +2,13 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
+use std::time;
 
 use mesh;
 
 pub fn load_from_file (file_name : &str) -> mesh::Mesh {
+
+	let start = time::SystemTime::now();
 
 	let f = File::open(file_name).expect("file not found");
 	let file = BufReader::new(&f);
@@ -97,8 +100,19 @@ pub fn load_from_file (file_name : &str) -> mesh::Mesh {
 		}
 		//Todo remove similar vertex
 
+		let end = time::SystemTime::now();
+		let elapsed = end.duration_since(start).expect("");
+		let s = elapsed.as_secs() as f32 + 1e-9 *(elapsed.subsec_nanos() as f32);
+		println!("time elapsed {:4.3} ", s);
+
 		return mesh::Mesh::new (r_vertex, r_index, vertex_type )
 	}
+
+	let end = time::SystemTime::now();
+	let elapsed = end.duration_since(start).expect("");
+	let s = elapsed.as_secs() as f32 + 1e-9 *(elapsed.subsec_nanos() as f32); 
+	println!("time elapsed {:4.3} ", s);
+
 
 	mesh::Mesh::new (vertex, v_index, vertex_type )
 }

@@ -7,3 +7,4 @@ authors = ["userFromHades <justForWork113@gmail.com>"]
 rand = "0.3.0"
 sdl2 = "*"
 bitflags = "1.0"
+time = "0.1"

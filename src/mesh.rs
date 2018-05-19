@@ -23,7 +23,7 @@ bitflags! {
 
 impl VertexType {
 
-	#[warn(dead_code)]
+	#[allow(dead_code)]
 	pub fn size (self) -> usize {
 		let mut size : usize = 0;
 		if ! (self &  VertexType::POSITION).is_empty() {
@@ -52,7 +52,7 @@ impl VertexType {
 		}
 		size
 	}
-	}
+}
 
 pub struct Mesh {
 	vertex  : Vec<f32>,
@@ -85,9 +85,6 @@ impl Mesh {
 	             transform : &vec::Mat4x4)
 	{
 		let index  = & self.index;
-		let vertex = & self.vertex;
-
-		let count = self.vertex_type.count();
 
 		for i in 0..index.len()/3 {
 
