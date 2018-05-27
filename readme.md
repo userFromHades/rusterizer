@@ -1,0 +1,1 @@
+Implimetation of simple software render on rust by this [manual](https://github.com/ssloy/tinyrenderer).

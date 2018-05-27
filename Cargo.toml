@@ -1,0 +1,10 @@
+[package]
+name = "rusterizator"
+version = "0.1.0"
+authors = ["userFromHades <justForWork113@gmail.com>"]
+
+[dependencies]
+rand = "0.3.0"
+sdl2 = "*"
+bitflags = "1.0"
+time = "0.1"
