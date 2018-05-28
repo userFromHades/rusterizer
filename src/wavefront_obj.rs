@@ -4,9 +4,9 @@ use std::io::BufReader;
 use std::io::BufRead;
 use std::time;
 
-use mesh;
+use mesh::*;
 
-pub fn load_from_file (file_name : &str) -> mesh::Mesh {
+pub fn load_from_file (file_name : &str) -> Mesh {
 
 	let start = time::SystemTime::now();
 
@@ -20,7 +20,7 @@ pub fn load_from_file (file_name : &str) -> mesh::Mesh {
 	let mut n_index     : Vec<u32> = Vec::new();
 	let mut texture     : Vec<f32> = Vec::new();
 	let mut t_index     : Vec<u32> = Vec::new();
-	let mut vertex_type : mesh::VertexType = mesh::VertexType::POSITION;
+	let mut vertex_type : VertexType = VertexType::POSITION;
 
 	for l in lines {
 		let words : Vec<&str> = l.split_whitespace().collect();
@@ -63,7 +63,7 @@ pub fn load_from_file (file_name : &str) -> mesh::Mesh {
 			v_index.push( i_words_3[0].parse::<u32>().unwrap() - 1);
 
 			if i_words_1.len() > 1{
-				vertex_type |= mesh::VertexType::TEXTURE | mesh::VertexType::NORMALE;
+				vertex_type |= VertexType::TEXTURE | VertexType::NORMALE;
 
 				t_index.push( i_words_1[1].parse::<u32>().unwrap() - 1);
 				t_index.push( i_words_2[1].parse::<u32>().unwrap() - 1);
@@ -79,7 +79,7 @@ pub fn load_from_file (file_name : &str) -> mesh::Mesh {
 
 	let mut r_vertex : Vec<f32> = Vec::new();
 	let mut r_index  : Vec<u32> = Vec::new();
-	if vertex_type != mesh::VertexType::POSITION {
+	if vertex_type != VertexType::POSITION {
 		for i in 0..v_index.len(){
 			let v_n = v_index[i];
 			let t_n = t_index[i];
@@ -105,7 +105,7 @@ pub fn load_from_file (file_name : &str) -> mesh::Mesh {
 		let s = elapsed.as_secs() as f32 + 1e-9 *(elapsed.subsec_nanos() as f32);
 		println!("time elapsed {:4.3} ", s);
 
-		return mesh::Mesh::new (r_vertex, r_index, vertex_type )
+		return Mesh::new (r_vertex, r_index, vertex_type )
 	}
 
 	let end = time::SystemTime::now();
@@ -114,5 +114,5 @@ pub fn load_from_file (file_name : &str) -> mesh::Mesh {
 	println!("time elapsed {:4.3} ", s);
 
 
-	mesh::Mesh::new (vertex, v_index, vertex_type )
+	Mesh::new (vertex, v_index, vertex_type )
 }

@@ -9,14 +9,16 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
 
-use vec;
-use texture;
-use mesh;
+use vec::*;
+use texture::*;
+use mesh::*;
 
-fn sort_vertexes ( mut p0 : vec::Vec3,
-                   mut p1 : vec::Vec3,
-                   mut p2 : vec::Vec3) ->
-                (vec::Vec3, vec::Vec3, vec::Vec3)
+
+
+fn sort_vertexes ( mut p0 : Vec3,
+                   mut p1 : Vec3,
+                   mut p2 : Vec3) ->
+                (Vec3, Vec3, Vec3)
 {
 	if p0.x > p1.x {
 		mem::swap(&mut p0, &mut p1);
@@ -32,8 +34,8 @@ fn sort_vertexes ( mut p0 : vec::Vec3,
 }
 
 fn sort_vertexes_ (
-    mut p0 : mesh::Vertex,  mut p1 : mesh::Vertex,  mut p2 : mesh::Vertex) ->
-    (mesh::Vertex, mesh::Vertex, mesh::Vertex)
+    mut p0 : Vertex,  mut p1 : Vertex,  mut p2 : Vertex) ->
+    (Vertex, Vertex, Vertex)
 {
 	if p0.x > p1.x {
 		mem::swap(&mut p0, &mut p1);
@@ -58,7 +60,7 @@ pub struct MyCanvas {
 	rgb_buffer: Vec<u8>,
 	z_buffer: Vec<f32>,
 
-	pub texture : Option<texture::Texture>,
+	pub texture : Option<Texture>,
 
 }
 
@@ -87,7 +89,7 @@ impl MyCanvas {
 		}
 	}
 
-	pub fn set_texture(&mut self, t: texture::Texture){
+	pub fn set_texture(&mut self, t: Texture){
 		self.texture = Some(t);
 	}
 
@@ -214,9 +216,9 @@ impl MyCanvas {
 		}
 	}
 
-	pub fn draw_solid_triangle (&mut self, p0 : vec::Vec3,
-	                                       p1 : vec::Vec3,
-	                                       p2 : vec::Vec3,
+	pub fn draw_solid_triangle (&mut self, p0 : Vec3,
+	                                       p1 : Vec3,
+	                                       p2 : Vec3,
 	                                       color : u32 )
 	{
 		let (p0, p1, p2) = sort_vertexes(p0, p1, p2);
@@ -282,7 +284,7 @@ impl MyCanvas {
 		}
 	}
 
-	fn draw_vline (&mut self, x : i32, _p0 : &mesh::Vertex, _p1 : &mesh::Vertex){
+	fn draw_vline (&mut self, x : i32, _p0 : &Vertex, _p1 : &Vertex){
 
 		let y0 = ((1.0 - _p0.y) * (self.height as f32)/ 2.0) as i32;
 		let y1 = ((1.0 - _p1.y) * (self.height as f32)/ 2.0) as i32;
@@ -291,7 +293,7 @@ impl MyCanvas {
 			let dy = (y - y0) as f32;
 			let k = -(dy as f32) * 2.0 / (self.height as f32) / (_p1.y - _p0.y);
 
-			let p = mesh::Vertex::interpolate(&_p0, &_p1, k);
+			let p = Vertex::interpolate(&_p0, &_p1, k);
 
 			if p.z <  self.depth(x, y){
 				self.set_depth(x, y, p.z);
@@ -302,9 +304,9 @@ impl MyCanvas {
 	}
 
 	pub fn draw_textured_triangle (&mut self,
-	    p0 : mesh::Vertex,
-	    p1 : mesh::Vertex,
-	    p2 : mesh::Vertex
+	    p0 : Vertex,
+	    p1 : Vertex,
+	    p2 : Vertex
 	    )
 	{
 		let (p0, p1, p2) = sort_vertexes_(p0, p1, p2);
@@ -321,10 +323,10 @@ impl MyCanvas {
 			let dx = (x - x0) as f32;
 
 			let k = (dx as f32) * kx10;
-			let mut _p0 = mesh::Vertex::interpolate(&p0, &p1, k);
+			let mut _p0 = Vertex::interpolate(&p0, &p1, k);
 
 			let k = (dx as f32) * kx20;
-			let mut _p1 = mesh::Vertex::interpolate(&p0, &p2, k);
+			let mut _p1 = Vertex::interpolate(&p0, &p2, k);
 
 			if _p0.y < _p1.y {
 				mem::swap(&mut _p0,   &mut _p1);
@@ -336,10 +338,10 @@ impl MyCanvas {
 		for x in x1..x2{
 
 			let k = (x - x1) as f32 * kx21;
-			let mut _p0 = mesh::Vertex::interpolate(&p1, &p2, k);
+			let mut _p0 = Vertex::interpolate(&p1, &p2, k);
 
 			let k = (x - x0) as f32 * kx20;
-			let mut _p1 = mesh::Vertex::interpolate(&p0, &p2, k);
+			let mut _p1 = Vertex::interpolate(&p0, &p2, k);
 
 			if _p0.y < _p1.y {
 				mem::swap(&mut _p0,   &mut _p1);

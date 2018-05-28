@@ -6,7 +6,7 @@ use std::io::prelude::*;
 use std::mem;
 use std::time;
 
-use texture;
+use texture::*;
 
 fn f <T : Sized> () -> usize{
 	mem::size_of::<T>()
@@ -29,7 +29,7 @@ fn take<T : Sized>(file: &mut BufReader<File>) -> Result<T, io::Error> {
 }
 
 
-pub fn load_from_file (file_name : &str) -> Result< texture::Texture, io::Error >{
+pub fn load_from_file (file_name : &str) -> Result< Texture, io::Error >{
 	let start = time::SystemTime::now();
 
 	let f = File::open(file_name)?;
@@ -99,5 +99,5 @@ pub fn load_from_file (file_name : &str) -> Result< texture::Texture, io::Error 
 	let s = elapsed.as_secs() as f32 + 1e-9 *(elapsed.subsec_nanos() as f32);
 	println!("time elapsed {:4.3} ", s);
 
-	return Ok(texture::Texture::new(width, height,texture::ColorType::RGB24,data))
+	return Ok(Texture::new(width, height,ColorType::RGB24,data))
 }
