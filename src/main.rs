@@ -14,6 +14,16 @@ mod mesh;
 mod texture;
 
 use vec::*;
+use mesh::*;
+
+
+struct GrayMaterial {}
+
+impl canvas::Material for GrayMaterial{
+	fn draw (&mut self, p : &Vertex) -> u32 {
+		0x888888
+	}
+}
 
 fn main() {
 
@@ -45,13 +55,13 @@ fn main() {
 	//c.line( 200, 20, 20,  200,  0xff00ff);
 	c.line( 20,  200, 200, 20,   0xff00ff);
 
-	c.set_texture(head_t);
+
 	/*
-	c.draw_textured_triangle(
+	c.draw_triangle( GrayMaterial {},
 	    Vertex{ x:  0.6, y:  0.6, z: 0.0, tx: 1.0, ty: 1.0, nx: 0.0, ny: 0.0, nz: 0.0},
 	    Vertex{ x: -0.4, y:  0.5, z: 7.5, tx: 0.0, ty: 1.0, nx: 0.0, ny: 0.0, nz: 0.0},
 	    Vertex{ x:  0.5, y: -0.4, z: 0.0, tx: 1.0, ty: 0.0, nx: 0.0, ny: 0.0, nz: 0.0});
-	c.draw_textured_triangle(
+	c.draw_triangle( GrayMaterial {},
 	    Vertex{ x: -0.5, y: -0.5, z: 0.0, tx: 0.0, ty: 0.0, nx: 0.0, ny: 0.0, nz: 0.0},
 	    Vertex{ x: -0.4, y:  0.5, z: 7.5, tx: 0.0, ty: 1.0, nx: 0.0, ny: 0.0, nz: 0.0},
 	    Vertex{ x:  0.5, y: -0.4, z: 0.0, tx: 1.0, ty: 0.0, nx: 0.0, ny: 0.0, nz: 0.0});
@@ -59,12 +69,12 @@ fn main() {
 
 	let m1 = Mat4x4::scale(0.5, 0.5, 0.5) * Mat4x4::translation(0.0, -0.5, 5.0) * Mat4x4::retro_proj(0.45);
 	let m2 = Mat4x4::scale(0.5, 0.5, 0.5) * Mat4x4::translation(0.3, 0.2, 8.5)  * Mat4x4::retro_proj(0.45);
-	teaport.draw(&mut c, &m1);
-	teaport.draw(&mut c, &m2);
+	teaport.draw(&mut c,&mut GrayMaterial {}, &m1);
+	teaport.draw(&mut c,&mut GrayMaterial {}, &m2);
 
 	//c.set_texture(head_t);
 	let m1 = Mat4x4::y_rotation(3.141592) * Mat4x4::translation(-0.3,- 0.2, 1.5) * Mat4x4::retro_proj(0.45);
-	head.draw   (&mut c, &m1);
+	head.draw (&mut c, &mut GrayMaterial {}, &m1);
 
 	c.wait_end();
 

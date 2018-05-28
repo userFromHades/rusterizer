@@ -1,4 +1,4 @@
-use canvas;
+use canvas::*;
 use vec;
 //#[macro_use]
 //extern crate bitflags;
@@ -68,10 +68,12 @@ pub struct Vertex {
 }
 
 impl Vertex {
+	#[warn(dead_code)]
 	pub fn get_position(&self) -> vec::Vec3 {
 		vec::Vec3::new(self.x, self.y, self.z)
 	}
 
+	#[warn(dead_code)]
 	pub fn set_position(&mut self, p : & vec::Vec3){
 		self.x = p.x;
 		self.y = p.y;
@@ -109,6 +111,7 @@ impl Mesh {
 		Mesh { vertex : vertex, index : index, vertex_type : vertex_type }
 	}
 
+	#[allow(dead_code)]
 	fn get_position (&self, index : usize) -> vec::Vec3 {
 		let count = self.vertex_type.count();
 		vec::Vec3::new(  self.vertex[(index * count + 0) as usize],
@@ -116,6 +119,7 @@ impl Mesh {
 		                 self.vertex[(index * count + 2) as usize])
 	}
 
+	#[allow(dead_code)]
 	fn get_tex_coord (&self, index : usize) -> vec::Vec2 {
 		let count = self.vertex_type.count();
 		vec::Vec2::new(  self.vertex[(index * count + 3) as usize],
@@ -143,8 +147,9 @@ impl Mesh {
 		Vertex { x : x , y : y, z : z, nx : nx, ny : ny, nz : nz, tx: tx, ty : ty}
 	}
 
-	pub fn draw (& self,
-	             c : &mut canvas::MyCanvas,
+	pub fn draw< M : Material> (& self,
+	             c : &mut MyCanvas,
+	             m : &mut M,
 	             transform : &vec::Mat4x4)
 	{
 		let index  = & self.index;
@@ -175,18 +180,16 @@ impl Mesh {
 				continue;
 			}
 
-			let l = vec::Vec3::new(1.0, 0.0, 0.0).normalized();
-
-			let f = clump (0.5 + 0.5 * vec::dot_product(n, l), 0.0, 1.0);
-
-			let cl = (f * 255.0) as u32;
-			let color : u32 = (cl << 16) | (cl << 8) | cl;
+			//let l = vec::Vec3::new(1.0, 0.0, 0.0).normalized();
+			//let f = clump (0.5 + 0.5 * vec::dot_product(n, l), 0.0, 1.0);
+			//let cl = (f * 255.0) as u32;
+			//let color : u32 = (cl << 16) | (cl << 8) | cl;
 
 			if (self.vertex_type & VertexType::TEXTURE).is_empty() {
-				c.draw_solid_triangle (p0, p1, p2, color);
+				c.draw_triangle (m, v0, v1, v2);
 			}
 			else{
-				c.draw_textured_triangle(v0, v1, v2);
+				c.draw_triangle(m, v0, v1, v2);
 			}
 		}
 	}

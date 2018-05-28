@@ -13,27 +13,11 @@ use vec::*;
 use texture::*;
 use mesh::*;
 
-
-
-fn sort_vertexes ( mut p0 : Vec3,
-                   mut p1 : Vec3,
-                   mut p2 : Vec3) ->
-                (Vec3, Vec3, Vec3)
-{
-	if p0.x > p1.x {
-		mem::swap(&mut p0, &mut p1);
-	}
-	if p0.x > p2.x {
-		mem::swap(&mut p0, &mut p2);
-	}
-	if p1.x > p2.x {
-		mem::swap(&mut p1, &mut p2);
-	}
-
-	(p0, p1, p2)
+pub trait Material {
+	fn draw (&mut self, p : &Vertex) -> u32;
 }
 
-fn sort_vertexes_ (
+fn sort_vertexes (
     mut p0 : Vertex,  mut p1 : Vertex,  mut p2 : Vertex) ->
     (Vertex, Vertex, Vertex)
 {
@@ -50,6 +34,7 @@ fn sort_vertexes_ (
 	(p0, p1, p2)
 }
 
+
 pub struct MyCanvas {
 	sdl_context : sdl2::Sdl,
 	sdl_canvas: sdl2::render::Canvas<Window>,
@@ -59,8 +44,6 @@ pub struct MyCanvas {
 
 	rgb_buffer: Vec<u8>,
 	z_buffer: Vec<f32>,
-
-	pub texture : Option<Texture>,
 
 }
 
@@ -85,20 +68,9 @@ impl MyCanvas {
 			height: height,
 			rgb_buffer: vec![0; (width * height * 3) as usize],
 			z_buffer: vec![100000.0; (width * height) as usize],
-			texture : None,
 		}
 	}
 
-	pub fn set_texture(&mut self, t: Texture){
-		self.texture = Some(t);
-	}
-
-	pub fn get_tex_colour (&mut self, x : f32, y : f32) -> u32 {
-		return if self.texture.is_some(){
-			let t = self.texture.as_ref().unwrap();
-			t.get(x, y)
-		} else { 0x777777 };
-	}
 
 	pub fn clear(&mut self) {
 		self.sdl_canvas.clear();
@@ -216,75 +188,7 @@ impl MyCanvas {
 		}
 	}
 
-	pub fn draw_solid_triangle (&mut self, p0 : Vec3,
-	                                       p1 : Vec3,
-	                                       p2 : Vec3,
-	                                       color : u32 )
-	{
-		let (p0, p1, p2) = sort_vertexes(p0, p1, p2);
-
-		let (x0, y0) = self.to_pix_coord(p0.x, p0.y);
-		let (x1, y1) = self.to_pix_coord(p1.x, p1.y);
-		let (x2, y2) = self.to_pix_coord(p2.x, p2.y);
-
-		let ky10 = (y1 - y0) as f32 / (x1 - x0) as f32;
-		let ky21 = (y2 - y1) as f32 / (x2 - x1) as f32;
-		let ky20 = (y2 - y0) as f32 / (x2 - x0) as f32;
-
-		let z0 = p0.z;
-		let z1 = p1.z;
-		let z2 = p2.z;
-
-		let kz10 = (z1 - z0) as f32 / (x1 - x0) as f32;
-		let kz21 = (z2 - z1) as f32 / (x2 - x1) as f32;
-		let kz20 = (z2 - z0) as f32 / (x2 - x0) as f32;
-
-		for x in x0..x1{
-			let mut _y0 = y0 + (ky20 * (x - x0) as f32) as i32;
-			let mut _y1 = y0 + (ky10 * (x - x0) as f32) as i32;
-
-			let mut _z0 = z0 + (kz20 * (x - x0) as f32) ;
-			let mut _z1 = z0 + (kz10 * (x - x0) as f32) ;
-
-			if _y0 > _y1{
-				mem::swap(&mut _y0, &mut _y1);
-				mem::swap(&mut _z0, &mut _z1);
-			}
-
-			let kz = (_z1 - _z0) / (_y1 - _y0) as f32;
-			for y in _y0.._y1{
-				let _z = _z0 + (y - _y0) as f32 * kz;
-				if _z <  self.depth(x, y){
-					self.set_depth(x, y, _z);
-					self.point(x, y, color);
-				}
-			}
-		}
-
-		for x in x1..(x2 ){
-			let mut _y0 = y0 + (ky20 * (x - x0) as f32) as i32;
-			let mut _y1 = y1 + (ky21 * (x - x1) as f32) as i32;
-
-			let mut _z0 = z0 + (kz20 * (x - x0) as f32) ;
-			let mut _z1 = z1 + (kz21 * (x - x1) as f32) ;
-
-			if _y0 > _y1{
-				mem::swap(&mut _y0, &mut _y1);
-				mem::swap(&mut _z0, &mut _z1);
-			}
-
-			let kz = (_z1 - _z0) / (_y1 - _y0) as f32;
-			for y in _y0.._y1{
-				let _z = _z0 + (y - _y0) as f32 * kz;
-				if _z <  self.depth(x, y){
-					self.set_depth(x, y, _z);
-					self.point(x, y, color);
-				}
-			}
-		}
-	}
-
-	fn draw_vline (&mut self, x : i32, _p0 : &Vertex, _p1 : &Vertex){
+	fn draw_vline<T: Material> (&mut self, m : &mut  T, x : i32, _p0 : &Vertex, _p1 : &Vertex){
 
 		let y0 = ((1.0 - _p0.y) * (self.height as f32)/ 2.0) as i32;
 		let y1 = ((1.0 - _p1.y) * (self.height as f32)/ 2.0) as i32;
@@ -297,19 +201,22 @@ impl MyCanvas {
 
 			if p.z <  self.depth(x, y){
 				self.set_depth(x, y, p.z);
-				let color = self.get_tex_colour(p.tx, p.ty);
+				let color = m.draw(&p);
+				//let color = self.get_tex_colour(p.tx, p.ty);
 				self.point(x, y, color);
 			}
 		}
 	}
 
-	pub fn draw_textured_triangle (&mut self,
+
+	pub fn draw_triangle<T: Material> (&mut self, m : &mut  T,
 	    p0 : Vertex,
 	    p1 : Vertex,
 	    p2 : Vertex
 	    )
 	{
-		let (p0, p1, p2) = sort_vertexes_(p0, p1, p2);
+
+		let (p0, p1, p2) = sort_vertexes(p0, p1, p2);
 
 		let (x0, _) = self.to_pix_coord(p0.x, p0.y);
 		let (x1, _) = self.to_pix_coord(p1.x, p1.y);
@@ -332,7 +239,7 @@ impl MyCanvas {
 				mem::swap(&mut _p0,   &mut _p1);
 			}
 
-			self.draw_vline(x, &_p0, &_p1);
+			self.draw_vline(m, x, &_p0, &_p1);
 		}
 
 		for x in x1..x2{
@@ -347,7 +254,7 @@ impl MyCanvas {
 				mem::swap(&mut _p0,   &mut _p1);
 			}
 
-			self.draw_vline(x, &_p0, &_p1);
+			self.draw_vline(m, x, &_p0, &_p1);
 		}
 	}
 
